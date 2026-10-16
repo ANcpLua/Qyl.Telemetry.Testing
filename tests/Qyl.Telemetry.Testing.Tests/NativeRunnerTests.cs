@@ -17,7 +17,8 @@ public sealed class NativeRunnerTests
     public static void LocateProbe(TestContext _)
     {
         DirectoryInfo? root = new(AppContext.BaseDirectory);
-        while (root is not null && !File.Exists(Path.Combine(root.FullName, "Telemetry.Testing.slnx"))) root = root.Parent;
+        while (root is not null && !File.Exists(Path.Combine(root.FullName, "Telemetry.Testing.slnx")))
+            root = root.Parent;
         Assert.IsNotNull(root);
         var project = Path.Combine(root.FullName,
             "tests/Qyl.Telemetry.Testing.Probes/Qyl.Telemetry.Testing.Probes.csproj");

@@ -187,10 +187,13 @@ public sealed class TraceModelTests
     [DataRow(RequirementLevel.OptIn)]
     public void Absent_non_required_attributes_do_not_fail_conformance(RequirementLevel level)
     {
-        var definition = new SpanDefinition<Server>("optional.server", "optional.server", "Optional field contract", Stability.Stable,
-            Deprecation.None, [new AttributeRef("optional", "string", level, false, null, AttributePhase.Start, true)], []);
+        var definition = new SpanDefinition<Server>("optional.server", "optional.server", "Optional field contract",
+            Stability.Stable,
+            Deprecation.None, [new AttributeRef("optional", "string", level, false, null, AttributePhase.Start, true)],
+            []);
         var span = Model(new Dictionary<string, object?>());
-        var report = new QylTrace(span.TraceId, new TelemetrySnapshot([span], [], [], [])).Conformance(definition, _ => true);
+        var report =
+            new QylTrace(span.TraceId, new TelemetrySnapshot([span], [], [], [])).Conformance(definition, _ => true);
         Assert.AreEqual(1, report.SpansChecked);
         Assert.AreEqual("optional.server", report.DefinitionId);
         Assert.IsEmpty(report.Issues);
@@ -205,8 +208,10 @@ public sealed class TraceModelTests
     {
         var attributes = new Dictionary<string, object?>();
         if (present) attributes["field"] = "value";
-        var definition = new SpanDefinition<Server>("invalid.server", "invalid.server", "Invalid requirement contract", Stability.Stable,
-            Deprecation.None, [new AttributeRef("field", "string", (RequirementLevel)99, false, null, AttributePhase.Start, true)], []);
+        var definition = new SpanDefinition<Server>("invalid.server", "invalid.server", "Invalid requirement contract",
+            Stability.Stable,
+            Deprecation.None,
+            [new AttributeRef("field", "string", (RequirementLevel)99, false, null, AttributePhase.Start, true)], []);
         var span = Model(attributes);
         var error = Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
             new QylTrace(span.TraceId, new TelemetrySnapshot([span], [], [], [])).Conformance(definition, _ => true));
@@ -218,10 +223,16 @@ public sealed class TraceModelTests
     [TestMethod]
     public void Present_conditional_attribute_has_no_unresolved_requirement()
     {
-        var definition = new SpanDefinition<Server>("conditional.server", "conditional.server", "Conditional field contract", Stability.Stable,
-            Deprecation.None, [new AttributeRef("field", "string", RequirementLevel.ConditionallyRequired, false, "When enabled", AttributePhase.Start, true)], []);
+        var definition = new SpanDefinition<Server>("conditional.server", "conditional.server",
+            "Conditional field contract", Stability.Stable,
+            Deprecation.None,
+            [
+                new AttributeRef("field", "string", RequirementLevel.ConditionallyRequired, false, "When enabled",
+                    AttributePhase.Start, true)
+            ], []);
         var span = Model(new Dictionary<string, object?> { ["field"] = "value" });
-        var report = new QylTrace(span.TraceId, new TelemetrySnapshot([span], [], [], [])).Conformance(definition, _ => true);
+        var report =
+            new QylTrace(span.TraceId, new TelemetrySnapshot([span], [], [], [])).Conformance(definition, _ => true);
         Assert.AreEqual(1, report.SpansChecked);
         Assert.IsEmpty(report.Issues);
         Assert.IsEmpty(report.UnevaluatedConditions);
@@ -242,7 +253,10 @@ public sealed class TraceModelTests
         Assert.IsEmpty(report.Issues);
         Assert.IsFalse(report.IsConformant);
         Assert.AreSequenceEqual(
-            ["error.type", "http.request.method_original", "http.response.status_code", "http.route", "network.protocol.name", "server.port", "url.query"],
+            [
+                "error.type", "http.request.method_original", "http.response.status_code", "http.route",
+                "network.protocol.name", "server.port", "url.query"
+            ],
             report.UnevaluatedConditions.Select(condition => condition.Split(':')[1]));
     }
 

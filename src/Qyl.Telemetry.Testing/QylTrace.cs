@@ -56,7 +56,8 @@ public sealed class QylTrace
             .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
         Calls = Spans.Where(s =>
                 s is { Kind: SpanKind.Server, ParentSpanId: { } parent } && byId.TryGetValue(parent, out var client)
-                && client.Kind == SpanKind.Client && client.Service != s.Service)
+                                                                         && client.Kind == SpanKind.Client &&
+                                                                         client.Service != s.Service)
             .Select(s => new Call(byId[s.ParentSpanId!], s)).AsReadOnlySnapshot();
         Metrics = capture.Metrics.Select(m => Correlate(m, traceId, partition))
             .OfType<MetricEvidence>().AsReadOnlySnapshot();
@@ -138,14 +139,16 @@ internal static class SpanConformance
     {
         ArgumentNullException.ThrowIfNull(definition);
         ArgumentNullException.ThrowIfNull(select);
-        var attributes = definition.Attributes.Select(attribute => (attribute, requirement: attribute.RequirementLevel switch
-        {
-            RequirementLevel.Required => (Required: true, Conditional: false),
-            RequirementLevel.ConditionallyRequired => (Required: false, Conditional: true),
-            RequirementLevel.Unspecified or RequirementLevel.Recommended or RequirementLevel.OptIn => (Required: false, Conditional: false),
-            _ => throw new ArgumentOutOfRangeException(nameof(definition), attribute.RequirementLevel,
-                $"Attribute '{attribute.Name}' has an unsupported requirement level.")
-        })).ToArray();
+        var attributes = definition.Attributes.Select(attribute => (attribute,
+            requirement: attribute.RequirementLevel switch
+            {
+                RequirementLevel.Required => (Required: true, Conditional: false),
+                RequirementLevel.ConditionallyRequired => (Required: false, Conditional: true),
+                RequirementLevel.Unspecified or RequirementLevel.Recommended or RequirementLevel.OptIn => (
+                    Required: false, Conditional: false),
+                _ => throw new ArgumentOutOfRangeException(nameof(definition), attribute.RequirementLevel,
+                    $"Attribute '{attribute.Name}' has an unsupported requirement level.")
+            })).ToArray();
         var selected = spans.Where(select).ToArray();
         var issues = new List<ConformanceIssue>();
         var unevaluated = new List<string>();

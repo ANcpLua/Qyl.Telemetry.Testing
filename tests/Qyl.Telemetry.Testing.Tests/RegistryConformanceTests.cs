@@ -46,15 +46,19 @@ public sealed class RegistryConformanceTests
             Events = [new SpanEventRecord("custom.event", 1, invalid)],
             Links = [new SpanLinkRecord("other-trace", "other-span", invalid)]
         };
-        var log = new LogRecord(resource, scope, 0, 0, 17, "Error", invalid, invalid, 0, 0, "trace", "span", "custom.event");
+        var log = new LogRecord(resource, scope, 0, 0, 17, "Error", invalid, invalid, 0, 0, "trace", "span",
+            "custom.event");
         var capture = new TelemetrySnapshot([span], [log], [], []);
         var report = RegistryConformance.Check(capture);
         Assert.IsFalse(report.IsConformant);
         Assert.AreEqual(8, report.AttributesChecked);
         Assert.AreSequenceEqual(
-            ["spans[0].resource", "spans[0].scope", "spans[0]", "spans[0].events[0]", "spans[0].links[0]",
-                "logs[0].resource", "logs[0].scope", "logs[0]"], report.Issues.Select(i => i.Location));
-        Assert.IsTrue(report.Issues.All(i => i is { Name: "http.response.status_code", Message: "Expected Integer.", Level: RegistryIssueLevel.Violation }));
+        [
+            "spans[0].resource", "spans[0].scope", "spans[0]", "spans[0].events[0]", "spans[0].links[0]",
+            "logs[0].resource", "logs[0].scope", "logs[0]"
+        ], report.Issues.Select(i => i.Location));
+        Assert.IsTrue(report.Issues.All(i => i is
+            { Name: "http.response.status_code", Message: "Expected Integer.", Level: RegistryIssueLevel.Violation }));
         Assert.AreSame(invalid, capture.Logs[0].Body); // A log body map is not an attribute collection.
         Assert.AreEqual(0UL, capture.Logs[0].TimeUnixNano);
     }
@@ -69,17 +73,24 @@ public sealed class RegistryConformanceTests
         [
             new GaugeData([number]), new SumData([number], 2, true),
             new HistogramData([new HistogramPoint(invalid, 0, 1, 1, 3, [1], [], [exemplar], 0, 3, 3)], 2),
-            new ExponentialHistogramData([new ExponentialHistogramPoint(invalid, 0, 1, 1, 3, 0, 0,
-                null, null, 0, [exemplar], 3, 3, 0)], 2),
+            new ExponentialHistogramData([
+                new ExponentialHistogramPoint(invalid, 0, 1, 1, 3, 0, 0,
+                    null, null, 0, [exemplar], 3, 3, 0)
+            ], 2),
             new SummaryData([new SummaryPoint(invalid, 0, 1, 1, 3, [], 0)])
         ];
-        var capture = new TelemetrySnapshot([], [], [.. shapes.Select(shape => Metric("custom.metric", "", shape))], []);
+        var capture =
+            new TelemetrySnapshot([], [], [.. shapes.Select(shape => Metric("custom.metric", "", shape))], []);
         var report = RegistryConformance.Check(capture);
         Assert.IsFalse(report.IsConformant);
         Assert.AreEqual(9, report.AttributesChecked);
         Assert.AreSequenceEqual(
-            ["metrics[0].points[0]", "metrics[0].points[0].exemplars[0]", "metrics[1].points[0]", "metrics[1].points[0].exemplars[0]",
-                "metrics[2].points[0]", "metrics[2].points[0].exemplars[0]", "metrics[3].points[0]", "metrics[3].points[0].exemplars[0]", "metrics[4].points[0]"],
+            [
+                "metrics[0].points[0]", "metrics[0].points[0].exemplars[0]", "metrics[1].points[0]",
+                "metrics[1].points[0].exemplars[0]",
+                "metrics[2].points[0]", "metrics[2].points[0].exemplars[0]", "metrics[3].points[0]",
+                "metrics[3].points[0].exemplars[0]", "metrics[4].points[0]"
+            ],
             report.Issues.Select(i => i.Location));
     }
 
@@ -96,7 +107,8 @@ public sealed class RegistryConformanceTests
         var report = RegistryConformance.Check(new TelemetrySnapshot([span], [], metrics, []));
         Assert.AreEqual(3, report.MetricsChecked);
         Assert.AreEqual(1, report.AttributesChecked);
-        Assert.AreSequenceEqual(["db.system", "http.server.request.duration", "container.memory.paging.faults"], report.Issues.Select(i => i.Name));
+        Assert.AreSequenceEqual(["db.system", "http.server.request.duration", "container.memory.paging.faults"],
+            report.Issues.Select(i => i.Name));
         Assert.AreEqual("Expected unit 's', observed 'ms'.", report.Issues[1].Message);
         Assert.AreEqual("metrics[1]", report.Issues[1].Location);
         Assert.IsFalse(report.IsConformant);
@@ -121,7 +133,8 @@ public sealed class RegistryConformanceTests
         var span = new SpanRecord("trace", "span", "custom")
         {
             Attributes = Attributes(("http.request.header.content_type", new object?[] { "text/plain" }),
-                ("http.request.headers.content_type", "custom"), ("pprof.scope.sample_type_order", new object?[] { 1L }),
+                ("http.request.headers.content_type", "custom"),
+                ("pprof.scope.sample_type_order", new object?[] { 1L }),
                 ("feature_flag.result.value", new Dictionary<string, object?>()))
         };
         var report = RegistryConformance.Check(new TelemetrySnapshot([span], [], [], []));
@@ -132,8 +145,10 @@ public sealed class RegistryConformanceTests
 
     [TestMethod]
     [DynamicData(nameof(ValueCases))]
-    public void Registry_value_kinds_preserve_otlp_types(RegistryAttributeValueKind kind, object? value, bool expected) =>
+    public void Registry_value_kinds_preserve_otlp_types(RegistryAttributeValueKind kind, object? value, bool expected)
+    {
         Assert.AreEqual(expected, RegistryConformance.Matches(kind, value));
+    }
 
     public static IEnumerable<object?[]> ValueCases()
     {
@@ -162,10 +177,14 @@ public sealed class RegistryConformanceTests
         }
     }
 
-    private static MetricRecord Metric(string name, string unit, MetricData data) =>
-        new(new ResourceRecord(new Dictionary<string, object?>()), null, name, "", unit,
+    private static MetricRecord Metric(string name, string unit, MetricData data)
+    {
+        return new MetricRecord(new ResourceRecord(new Dictionary<string, object?>()), null, name, "", unit,
             new Dictionary<string, object?>(), data);
+    }
 
-    private static Dictionary<string, object?> Attributes(params (string Name, object? Value)[] values) =>
-        values.ToDictionary(pair => pair.Name, pair => pair.Value, StringComparer.Ordinal);
+    private static Dictionary<string, object?> Attributes(params (string Name, object? Value)[] values)
+    {
+        return values.ToDictionary(pair => pair.Name, pair => pair.Value, StringComparer.Ordinal);
+    }
 }

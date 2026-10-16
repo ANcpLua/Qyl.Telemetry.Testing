@@ -51,7 +51,8 @@ internal static class OtlpDecode
     {
         if (bytes.IsEmpty && !required) return null;
         if (bytes.Length != size || !bytes.Span.ContainsAnyExcept((byte)0))
-            throw new InvalidDataException($"An OTLP identity must contain exactly {size} bytes and must not be all zero.");
+            throw new InvalidDataException(
+                $"An OTLP identity must contain exactly {size} bytes and must not be all zero.");
         return Convert.ToHexStringLower(bytes.Span);
     }
 

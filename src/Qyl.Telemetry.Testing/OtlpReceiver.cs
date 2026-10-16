@@ -189,58 +189,57 @@ public sealed class OtlpReceiver : IAsyncDisposable
             IMessage response;
             switch (signal)
             {
-            case "traces":
-            {
-                foreach (var resource in ExportTraceServiceRequest.Parser.ParseFrom(bytes).ResourceSpans)
-                foreach (var scope in resource.ScopeSpans)
-                foreach (var span in scope.Spans)
-                    Add(span,
-                        s => OtlpDecode.Span(s, OtlpDecode.Resource(resource.Resource, resource.SchemaUrl),
-                            OtlpDecode.Scope(scope.Scope, scope.SchemaUrl)), _spans);
-                response = new ExportTraceServiceResponse
+                case "traces":
                 {
-                    PartialSuccess = rejected == 0
-                        ? null
-                        : new ExportTracePartialSuccess
-                            { RejectedSpans = rejected, ErrorMessage = string.Join(" ", errors.Distinct()) }
-                };
-                break;
-            }
-            case "logs":
-            {
-                foreach (var resource in ExportLogsServiceRequest.Parser.ParseFrom(bytes).ResourceLogs)
-                foreach (var scope in resource.ScopeLogs)
-                foreach (var log in scope.LogRecords)
-                    Add(log,
-                        l => OtlpDecode.Log(l, OtlpDecode.Resource(resource.Resource, resource.SchemaUrl),
-                            OtlpDecode.Scope(scope.Scope, scope.SchemaUrl)), _logs);
-                response = new ExportLogsServiceResponse
+                    foreach (var resource in ExportTraceServiceRequest.Parser.ParseFrom(bytes).ResourceSpans)
+                    foreach (var scope in resource.ScopeSpans)
+                    foreach (var span in scope.Spans)
+                        Add(span,
+                            s => OtlpDecode.Span(s, OtlpDecode.Resource(resource.Resource, resource.SchemaUrl),
+                                OtlpDecode.Scope(scope.Scope, scope.SchemaUrl)), _spans);
+                    response = new ExportTraceServiceResponse
+                    {
+                        PartialSuccess = rejected == 0
+                            ? null
+                            : new ExportTracePartialSuccess
+                                { RejectedSpans = rejected, ErrorMessage = string.Join(" ", errors.Distinct()) }
+                    };
+                    break;
+                }
+                case "logs":
                 {
-                    PartialSuccess = rejected == 0
-                        ? null
-                        : new ExportLogsPartialSuccess
-                            { RejectedLogRecords = rejected, ErrorMessage = string.Join(" ", errors.Distinct()) }
-                };
-                break;
-            }
-            default:
-            {
-                foreach (var resource in ExportMetricsServiceRequest.Parser.ParseFrom(bytes).ResourceMetrics)
-                foreach (var scope in resource.ScopeMetrics)
-                foreach (var metric in scope.Metrics)
-                    Add(metric,
-                        m => OtlpDecode.Metric(m, OtlpDecode.Resource(resource.Resource, resource.SchemaUrl),
-                            OtlpDecode.Scope(scope.Scope, scope.SchemaUrl)), _metrics, PointCount(metric));
-                response = new ExportMetricsServiceResponse
+                    foreach (var resource in ExportLogsServiceRequest.Parser.ParseFrom(bytes).ResourceLogs)
+                    foreach (var scope in resource.ScopeLogs)
+                    foreach (var log in scope.LogRecords)
+                        Add(log,
+                            l => OtlpDecode.Log(l, OtlpDecode.Resource(resource.Resource, resource.SchemaUrl),
+                                OtlpDecode.Scope(scope.Scope, scope.SchemaUrl)), _logs);
+                    response = new ExportLogsServiceResponse
+                    {
+                        PartialSuccess = rejected == 0
+                            ? null
+                            : new ExportLogsPartialSuccess
+                                { RejectedLogRecords = rejected, ErrorMessage = string.Join(" ", errors.Distinct()) }
+                    };
+                    break;
+                }
+                default:
                 {
-                    PartialSuccess = rejected == 0
-                        ? null
-                        : new ExportMetricsPartialSuccess
-                            { RejectedDataPoints = rejected, ErrorMessage = string.Join(" ", errors.Distinct()) }
-                };
-                break;
-            }
-
+                    foreach (var resource in ExportMetricsServiceRequest.Parser.ParseFrom(bytes).ResourceMetrics)
+                    foreach (var scope in resource.ScopeMetrics)
+                    foreach (var metric in scope.Metrics)
+                        Add(metric,
+                            m => OtlpDecode.Metric(m, OtlpDecode.Resource(resource.Resource, resource.SchemaUrl),
+                                OtlpDecode.Scope(scope.Scope, scope.SchemaUrl)), _metrics, PointCount(metric));
+                    response = new ExportMetricsServiceResponse
+                    {
+                        PartialSuccess = rejected == 0
+                            ? null
+                            : new ExportMetricsPartialSuccess
+                                { RejectedDataPoints = rejected, ErrorMessage = string.Join(" ", errors.Distinct()) }
+                    };
+                    break;
+                }
             }
 
             Publish(new ExportReceipt(signal, accepted, rejected,

@@ -1,6 +1,6 @@
 <Solution>
-  <Project Path="../src/Qyl.Telemetry.Testing/Qyl.Telemetry.Testing.csproj"/>
-  <Project Path="../tests/Qyl.Telemetry.Testing.Tests/Qyl.Telemetry.Testing.Tests.csproj"/>
-  <Project Path="../tests/Qyl.Telemetry.Testing.Probes/Qyl.Telemetry.Testing.Probes.csproj"/>
-  <Project Path="build/_build.csproj"/>
+    <Project Path="../src/Qyl.Telemetry.Testing/Qyl.Telemetry.Testing.csproj"/>
+    <Project Path="../tests/Qyl.Telemetry.Testing.Tests/Qyl.Telemetry.Testing.Tests.csproj"/>
+    <Project Path="../tests/Qyl.Telemetry.Testing.Probes/Qyl.Telemetry.Testing.Probes.csproj"/>
+    <Project Path="build/_build.csproj"/>
 </Solution>

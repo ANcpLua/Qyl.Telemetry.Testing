@@ -27,9 +27,9 @@ public sealed record RegistryReport(
 
 /// <summary>Checks observed attribute types and deprecations, and registered metric units and deprecations.</summary>
 /// <remarks>
-/// Unknown custom names are valid and reported separately. This does not infer required attributes,
-/// close enum value sets, assign names to scopes, or infer an SDK instrument from an OTLP aggregation.
-/// Signal-specific requirements belong to an explicitly selected definition.
+///     Unknown custom names are valid and reported separately. This does not infer required attributes,
+///     close enum value sets, assign names to scopes, or infer an SDK instrument from an OTLP aggregation.
+///     Signal-specific requirements belong to an explicitly selected definition.
 /// </remarks>
 [PublicAPI]
 public static class RegistryConformance
@@ -53,9 +53,11 @@ public static class RegistryConformance
 
             attributesChecked++;
             if (attribute.Deprecation.IsDeprecated)
-                issues.Add(new RegistryIssue(location, name, RegistryIssueLevel.Improvement, "The pinned registry marks this attribute deprecated."));
+                issues.Add(new RegistryIssue(location, name, RegistryIssueLevel.Improvement,
+                    "The pinned registry marks this attribute deprecated."));
             if (!Matches(attribute.ValueKind, value))
-                issues.Add(new RegistryIssue(location, name, RegistryIssueLevel.Violation, $"Expected {attribute.ValueKind}."));
+                issues.Add(new RegistryIssue(location, name, RegistryIssueLevel.Violation,
+                    $"Expected {attribute.ValueKind}."));
         }
 
         for (var i = 0; i < capture.Metrics.Count; i++)
@@ -70,9 +72,11 @@ public static class RegistryConformance
             metricsChecked++;
             var location = $"metrics[{i}]";
             if (metric.Deprecation.IsDeprecated)
-                issues.Add(new RegistryIssue(location, observed.Name, RegistryIssueLevel.Improvement, "The pinned registry marks this metric deprecated."));
+                issues.Add(new RegistryIssue(location, observed.Name, RegistryIssueLevel.Improvement,
+                    "The pinned registry marks this metric deprecated."));
             if (metric.Unit is not null && metric.Unit != observed.Unit)
-                issues.Add(new RegistryIssue(location, observed.Name, RegistryIssueLevel.Violation, $"Expected unit '{metric.Unit}', observed '{observed.Unit}'."));
+                issues.Add(new RegistryIssue(location, observed.Name, RegistryIssueLevel.Violation,
+                    $"Expected unit '{metric.Unit}', observed '{observed.Unit}'."));
         }
 
         return new RegistryReport(capture.Spans.Count + capture.Logs.Count + capture.Metrics.Count,
@@ -80,21 +84,29 @@ public static class RegistryConformance
             customMetrics.AsReadOnlySnapshot());
     }
 
-    internal static bool Matches(RegistryAttributeValueKind kind, object? value) => kind switch
+    internal static bool Matches(RegistryAttributeValueKind kind, object? value)
     {
-        RegistryAttributeValueKind.String => value is string,
-        RegistryAttributeValueKind.Integer => value is long,
-        RegistryAttributeValueKind.Double => value is double,
-        RegistryAttributeValueKind.Boolean => value is bool,
-        RegistryAttributeValueKind.StringArray => value is IReadOnlyList<object?> strings && strings.All(v => v is string),
-        RegistryAttributeValueKind.IntegerArray => value is IReadOnlyList<object?> integers && integers.All(v => v is long),
-        RegistryAttributeValueKind.DoubleArray => value is IReadOnlyList<object?> doubles && doubles.All(v => v is double),
-        RegistryAttributeValueKind.BooleanArray => value is IReadOnlyList<object?> booleans && booleans.All(v => v is bool),
-        RegistryAttributeValueKind.Any => true,
-        _ => false
-    };
+        return kind switch
+        {
+            RegistryAttributeValueKind.String => value is string,
+            RegistryAttributeValueKind.Integer => value is long,
+            RegistryAttributeValueKind.Double => value is double,
+            RegistryAttributeValueKind.Boolean => value is bool,
+            RegistryAttributeValueKind.StringArray => value is IReadOnlyList<object?> strings &&
+                                                      strings.All(v => v is string),
+            RegistryAttributeValueKind.IntegerArray => value is IReadOnlyList<object?> integers &&
+                                                       integers.All(v => v is long),
+            RegistryAttributeValueKind.DoubleArray => value is IReadOnlyList<object?> doubles &&
+                                                      doubles.All(v => v is double),
+            RegistryAttributeValueKind.BooleanArray => value is IReadOnlyList<object?> booleans &&
+                                                       booleans.All(v => v is bool),
+            RegistryAttributeValueKind.Any => true,
+            _ => false
+        };
+    }
 
-    private static IEnumerable<(string Location, IReadOnlyDictionary<string, object?> Attributes)> AttributeSets(TelemetrySnapshot capture)
+    private static IEnumerable<(string Location, IReadOnlyDictionary<string, object?> Attributes)> AttributeSets(
+        TelemetrySnapshot capture)
     {
         for (var i = 0; i < capture.Spans.Count; i++)
         {
@@ -102,8 +114,10 @@ public static class RegistryConformance
             var location = $"spans[{i}]";
             foreach (var set in Context(location, span.Resource, span.Scope)) yield return set;
             yield return (location, span.Attributes);
-            for (var j = 0; j < span.Events.Count; j++) yield return ($"{location}.events[{j}]", span.Events[j].Attributes);
-            for (var j = 0; j < span.Links.Count; j++) yield return ($"{location}.links[{j}]", span.Links[j].Attributes);
+            for (var j = 0; j < span.Events.Count; j++)
+                yield return ($"{location}.events[{j}]", span.Events[j].Attributes);
+            for (var j = 0; j < span.Links.Count; j++)
+                yield return ($"{location}.links[{j}]", span.Links[j].Attributes);
         }
 
         for (var i = 0; i < capture.Logs.Count; i++)
@@ -137,13 +151,18 @@ public static class RegistryConformance
         if (scope is not null) yield return ($"{location}.scope", scope.Attributes);
     }
 
-    private static IEnumerable<(IReadOnlyDictionary<string, object?> Attributes, IReadOnlyList<ExemplarRecord> Exemplars)> Points(MetricData data) => data switch
+    private static
+        IEnumerable<(IReadOnlyDictionary<string, object?> Attributes, IReadOnlyList<ExemplarRecord> Exemplars)> Points(
+            MetricData data)
     {
-        GaugeData gauge => gauge.Points.Select(p => (p.Attributes, p.Exemplars)),
-        SumData sum => sum.Points.Select(p => (p.Attributes, p.Exemplars)),
-        HistogramData histogram => histogram.Points.Select(p => (p.Attributes, p.Exemplars)),
-        ExponentialHistogramData exponential => exponential.Points.Select(p => (p.Attributes, p.Exemplars)),
-        SummaryData summary => summary.Points.Select(p => (p.Attributes, (IReadOnlyList<ExemplarRecord>)[])),
-        _ => []
-    };
+        return data switch
+        {
+            GaugeData gauge => gauge.Points.Select(p => (p.Attributes, p.Exemplars)),
+            SumData sum => sum.Points.Select(p => (p.Attributes, p.Exemplars)),
+            HistogramData histogram => histogram.Points.Select(p => (p.Attributes, p.Exemplars)),
+            ExponentialHistogramData exponential => exponential.Points.Select(p => (p.Attributes, p.Exemplars)),
+            SummaryData summary => summary.Points.Select(p => (p.Attributes, (IReadOnlyList<ExemplarRecord>)[])),
+            _ => []
+        };
+    }
 }
