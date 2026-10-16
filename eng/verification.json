@@ -3,7 +3,7 @@
   "sdk": "10.0.401",
   "mstest": "4.5.1",
   "mtp": "2.5.1",
-  "status": "Candidate passed the full native package gate and isolated HTTP/gRPC package consumer. Public release is pending.",
+  "status": "Testing 2.0.0 published, indexed and native VERIFIED: public-only HTTP/gRPC SDK consumers passed.",
   "native_tests": {
     "passed": 194,
     "failed": 0,
@@ -185,7 +185,6 @@
     "change": "Only temporary NuGet cache relocated outside repository; no coverage settings or thresholds changed"
   },
   "pending": [
-    "Publish Testing2.0.0 through the native release script and verify public-only consumers",
     "Integrate AutoInstrumentation and prototype"
   ],
   "otel_sdk": "1.20.0",
@@ -227,9 +226,14 @@
     "log": "artifacts/grpc-pack-2.0.0-2.log"
   },
   "release": {
+    "source_commit": "8f4af48d48893dab5a2681d5c120cf2c3cc75bbb",
     "tag": "v2.0.0",
-    "status": "Not published; candidate validation complete.",
-    "native_verification": "artifacts/release-2.0.0-verify.log"
+    "url": "https://github.com/ANcpLua/Qyl.Telemetry.Testing/releases/tag/v2.0.0",
+    "public_package": "https://www.nuget.org/packages/Qyl.Telemetry.Testing/2.0.0",
+    "native_release_log": "artifacts/grpc-release-2.0.0.log",
+    "native_verification": "artifacts/release-2.0.0-verify.log",
+    "result": "VERIFIED; public-only restore and real HTTP/gRPC receiver consumers passed",
+    "verification_log_sha256": "3e7250f3744de8d1f5c0388eb9e5735e0fae93c2e1c40d59affe3505aa7b98d0"
   },
   "previous_dependency_symbol_audit": {
     "package": "Qyl.Telemetry.SemanticConventions",
