@@ -1,1 +1,13 @@
-<Project Sdk="MSTest.Sdk"><PropertyGroup><IsPackable>false</IsPackable><ShouldUnsetParentConfigurationAndPlatform>false</ShouldUnsetParentConfigurationAndPlatform></PropertyGroup><ItemGroup><ProjectReference Include="../Qyl.Telemetry.Testing.Probes/Qyl.Telemetry.Testing.Probes.csproj" ReferenceOutputAssembly="false"/><ProjectReference Include="../../src/Qyl.Telemetry.Testing/Qyl.Telemetry.Testing.csproj"/><PackageReference Include="OpenTelemetry" Version="1.20.0"/><PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.20.0"/><PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.1"/></ItemGroup></Project>
+<Project Sdk="MSTest.Sdk">
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+        <ShouldUnsetParentConfigurationAndPlatform>false</ShouldUnsetParentConfigurationAndPlatform>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../Qyl.Telemetry.Testing.Probes/Qyl.Telemetry.Testing.Probes.csproj" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="../../src/Qyl.Telemetry.Testing/Qyl.Telemetry.Testing.csproj"/>
+        <PackageReference Include="OpenTelemetry" Version="1.20.0"/>
+        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.20.0"/>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.1"/>
+    </ItemGroup>
+</Project>

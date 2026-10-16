@@ -1,1 +1,8 @@
-<Project Sdk="MSTest.Sdk"><PropertyGroup><IsPackable>false</IsPackable></PropertyGroup><ItemGroup><ProjectReference Include="../../src/Qyl.Telemetry.Testing/Qyl.Telemetry.Testing.csproj"/></ItemGroup></Project>
+<Project Sdk="MSTest.Sdk">
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../src/Qyl.Telemetry.Testing/Qyl.Telemetry.Testing.csproj"/>
+    </ItemGroup>
+</Project>
