@@ -3,7 +3,7 @@
   "sdk": "10.0.401",
   "mstest": "4.5.1",
   "mtp": "2.5.1",
-  "status": "Testing 3.0.0 candidate: 209 native tests, zero INFO-or-higher findings and isolated HTTP/gRPC package consumers passed. Not published.",
+  "status": "Testing 3.0.0 published, indexed and native VERIFIED: public-only HTTP/gRPC SDK consumers passed.",
   "native_tests": {
     "passed": 209,
     "failed": 0,
@@ -12,7 +12,8 @@
     "earlier_clean_source_archive_log": "artifacts/source-audit.log",
     "earlier_archive_scope": "127 tests before registry audit; not verification of the current source",
     "source_scope": "16 MiB default and one configurable positive limit for both transports; native ASP.NET Core HTTP wire/decompression limits, bounded gRPC decompression, native statuses with actual limits, cancellation and disposal.",
-    "discovery": "artifacts/receiver-payload-limits-discovery.json"
+    "discovery": "artifacts/receiver-payload-limits-discovery.json",
+    "release_gate_log": "artifacts/receiver-payload-limits-release-3.0.0.log"
   },
   "unrestricted_native_dotcov_gate": {
     "status": "historical failed 100% gate, retained before the explicit owner policy change",
@@ -185,7 +186,6 @@
     "change": "Only temporary NuGet cache relocated outside repository; no coverage settings or thresholds changed"
   },
   "pending": [
-    "Publish and verify Testing 3.0.0",
     "Integrate AutoInstrumentation and prototype"
   ],
   "otel_sdk": "1.20.0",
@@ -223,12 +223,18 @@
     "findings": 0,
     "severity": "INFO",
     "report": "artifacts/inspection.sarif",
-    "sha256": "10c10aa8c0c01036d5e12edb98920fcda7e67e977255bbfc2a97546171664924",
+    "sha256": "b75c54444719c840a164ef4a9b4965febd0405616c90d43d09d6ca8d33189244",
     "log": "artifacts/receiver-payload-limits-pack-3.log"
   },
   "release": {
-    "version": "3.0.0",
-    "result": "Not published; native package gate and isolated candidate consumer passed."
+    "source_commit": "011ffad1bb6c5b2cd3061c3ae19a8694fbe047bc",
+    "tag": "v3.0.0",
+    "url": "https://github.com/ANcpLua/Qyl.Telemetry.Testing/releases/tag/v3.0.0",
+    "public_package": "https://www.nuget.org/packages/Qyl.Telemetry.Testing/3.0.0",
+    "native_release_log": "artifacts/receiver-payload-limits-release-3.0.0.log",
+    "native_verification": "artifacts/release-3.0.0-verify.log",
+    "result": "VERIFIED; public-only restore and real HTTP/gRPC SDK consumers passed",
+    "verification_log_sha256": "edc3d4601298c378bedcff61b4140e5f676464df7bd9a74f16295319a0f08c51"
   },
   "previous_dependency_symbol_audit": {
     "package": "Qyl.Telemetry.SemanticConventions",
