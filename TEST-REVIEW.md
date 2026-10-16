@@ -1,0 +1,69 @@
+# Test review
+
+Reviewed every native test method and lifecycle fixture below. Grades are source-review judgments, not a substitute for execution. A means a focused independent oracle and owned state; B marks broad integration or descriptor-contract scope. There are no open Critical/High findings or F rows.
+
+The two intentionally failing child methods are owned by `Native_results_preserve_both_failures_and_each_data_row_identity`; they are never counted as unowned green tests. The raw Cobertura report retains16 unexecuted generated parser factories; native DotCov aggregation reports1019/1019 lines and360/360 branches. Both views are preserved.
+
+| File / method | Grade | Oracle and disposition |
+| --- | --- | --- |
+| `ProbeCases.cs` / `RowsKeepTheirArgumentsAndRoot` | A | Owned child fixture: two rows assert native args, root and hook identity; parent pins both TRX results/outputs. |
+| `ProbeCases.cs` / `OriginalAssertionFailure` | A | Owned deliberately failing child: parent requires exit2 and original assertion message/stack. It is not a standalone passing test. |
+| `ProbeCases.cs` / `OriginalExceptionFailure` | A | Owned deliberately failing child: parent requires original InvalidOperationException and message. It is not a standalone passing test. |
+| `ProbeCases.cs` / `Initialize` | A | Child consumer global setup uses the same real integration entrypoint. |
+| `ProbeCases.cs` / `Cleanup` | A | Child consumer global cleanup removes only the owned context metadata. |
+| `Assembly.cs` / `CloseHttpClient` | A | Native AssemblyCleanup disposes the shared HTTP client after tests complete. |
+| `Assembly.cs` / `Initialize` | A | Consumer-declared global setup records the invocation root in TestContext; actual native rows prove visibility. |
+| `Assembly.cs` / `Cleanup` | A | Consumer-declared global cleanup removes the context entry; it does not suppress a failure. |
+| `CaptureLifecycleTests.cs` / `Concurrent_capture_invocations_have_distinct_roots_and_keep_unrelated_wire_records_visible` | A | Concurrent owned receivers retain independent root IDs, restore previous activity and preserve an unrelated raw record in each snapshot. |
+| `CaptureLifecycleTests.cs` / `Multiple_waiters_are_notified_by_the_same_real_export` | A | Two pending predicates wake from a real HTTP export; both require exact span fields and receipt count. |
+| `CaptureLifecycleTests.cs` / `Canceled_startup_preserves_cancellation_instead_of_returning_a_live_receiver` | A | Pre-cancelled factory must throw exact OperationCanceledException; source finally disposes an untransferred application. |
+| `CaptureLifecycleTests.cs` / `Capture_timeout_fails_instead_of_accepting_missing_evidence` | A | Missing evidence faults exact TimeoutException and restores ambient activity. |
+| `IsolationTests.cs` / `InitializeRows` | A | Native ClassInitialize clears the owned ConcurrentDictionary; does not clear unrelated global state. |
+| `IsolationTests.cs` / `CleanupRows` | A | Native ClassCleanup clears the same owned dictionary after all rows. |
+| `IsolationTests.cs` / `Native_wrapper_and_global_hooks_preserve_each_data_rows_trace_identity` | A | Three native data rows require unique roots, native hook metadata, actual exported child parent ID and exact row attribute. |
+| `IsolationTests.cs` / `Action_failure_is_preserved_and_the_receiver_is_closed` | A | Exact user exception preserved; subsequent HTTP request to saved endpoint fails, establishing receiver cleanup. |
+| `LogWireTests.cs` / `Log_body_types_and_all_log_metadata_survive_the_wire` | A | Eight body variants keep exact runtime types and independent full resource/scope, severity, flags, timestamps, contexts, event name and exception fields. |
+| `MetricWireTests.cs` / `Every_metric_shape_retains_its_identity_metadata_and_distribution` | B | Five concrete metric variants assert names, metadata, timestamps, attrs, counts, temporality, distribution fields, exemplars and explicit partition indexes. Broad shape matrix has per-kind independent oracles. |
+| `MetricWireTests.cs` / `Metric_attribution_requires_matching_resource_partition_or_exemplar_point` | A | Mixed-point metric identifies only matching exemplar index; unrelated record remains in raw capture and is not falsely attributed. |
+| `NativeRunnerTests.cs` / `LocateProbe` | A | Native ClassInitialize only locates the already built ProjectReference output from the owning solution marker, including source archives without Git metadata; no build or source mutation during tests. |
+| `NativeRunnerTests.cs` / `Native_results_preserve_both_failures_and_each_data_row_identity` | B | Real child exit2 plus TRX4 rows,2pass2fail,4IDs, both original failure texts/stack identities, row arguments/root output and native durations. Process and directory owned in finally. |
+| `NativeRunnerTests.cs` / `Discovery_points_to_the_original_native_attribute_for_every_wrapped_row` | A | Real --list-tests json returns exactly two rows with native declared attribute file and line, not wrapper caller metadata. |
+| `NumberAndSessionTests.cs` / `Floating_point_numbers_integer_exemplars_and_absent_values_keep_their_discriminators` | A | Exact double0.125, integer-42 exemplar, absent value/context and no-recorded-value flag remain distinct. |
+| `NumberAndSessionTests.cs` / `Conflicting_observed_sessions_are_exposed_without_aliasing_the_trace_id` | A | Four exact span/resource/log session values retain observed order and make singular SessionId null. |
+| `NumberAndSessionTests.cs` / `Rejected_log_attributes_produce_exact_partial_success_without_discarding_the_valid_record` | A | Duplicate invalid log plus valid named log produces exact rejection error, retained scope/severity and1:1 receipt. |
+| `NumericFidelityTests.cs` / `Signed_integer_points_and_exemplars_retain_all_64_bits` | A | Three independent boundary literals beyond2^53/min/max are asserted as runtime long and exact value in both gauge and sum and their exemplars. |
+| `NumericFidelityTests.cs` / `Named_non_finite_and_signed_zero_doubles_keep_their_wire_bits` | A | NaN, positive/negative infinity and negative zero retain runtime double and exact IEEE754 bits for both point and exemplar; names checked independently. |
+| `NumericFidelityTests.cs` / `Unsigned_counts_and_bucket_counts_preserve_uint64_maximum` | A | Literal UInt64 maximum retained in histogram count/bucket, exponential count/zero/bucket and summary count; named metric order/cardinality fixed. |
+| `OptionalWireTests.cs` / `Absent_resource_and_scope_metadata_are_not_fabricated` | A | Wire absence stays null/empty and does not manufacture resource, scope, status description or parent identity. |
+| `OptionalWireTests.cs` / `Scope_schema_can_exist_without_an_instrumentation_scope_message` | A | Scope schema URL survives even when scope message is absent. |
+| `OptionalWireTests.cs` / `Optional_distribution_fields_remain_absent_instead_of_becoming_zero` | A | Absent histogram/exponential sum,min,max and bucket messages remain null. |
+| `OptionalWireTests.cs` / `Uncorrelated_log_without_body_or_context_is_kept_in_the_complete_capture` | A | One uncorrelated empty-body log retained raw with null IDs/body; trace query remains empty. |
+| `OptionalWireTests.cs` / `Unspecified_metric_data_stays_visible_but_is_never_attributed_as_a_measurement` | A | Unspecified payload retained raw, has zero accepted points and cannot become a correlated measurement merely through partition metadata. |
+| `ProtocolContractTests.cs` / `Internal_generated_protocol_matches_the_official_export_service_contract` | B | Three official service descriptors require exact names, method mode, request/reply field numbers, repetition, file path and internal CLR visibility; this is a pinned schema contract, not a network interoperability test. |
+| `ReceiverTests.cs` / `Malformed_protobuf_returns_bad_request_and_records_the_error` | A | Malformed single-byte payload yields HTTP400 and one zero-accepted receipt with a nonempty parse error. |
+| `ReceiverTests.cs` / `Partial_success_keeps_valid_spans_and_reports_the_exact_rejection` | A | One valid and one invalid span yield one exact retained identity and accepted/rejected1:1; protobuf response reports one rejection. |
+| `ReceiverTests.cs` / `Awaiting_missing_evidence_times_out_instead_of_passing_on_empty_capture` | A | Zero deadline with unmet predicate throws exact TimeoutException and leaves capture empty. |
+| `ReceiverTests.cs` / `Cancellation_interrupts_the_pending_condition` | A | Explicit cancellation interrupts a pending predicate with the native TaskCanceledException; receiver is disposed. |
+| `ReceiverTests.cs` / `Disposal_wakes_a_pending_condition_and_is_repeatable` | A | A wait started before disposal faults with ObjectDisposedException; second disposal succeeds. |
+| `ReceiverTests.cs` / `Invalid_metric_batch_reports_rejected_data_points_instead_of_metric_count` | A | Duplicate attributes invalidate a two-point metric; response and receipt report two rejected points and zero accepted metrics. |
+| `ReceiverTests.cs` / `Gzip_request_is_decoded_before_protobuf_processing` | A | Actually compressed protobuf produces the literal expected span identity, name, kind, status and scope through HTTP. |
+| `SdkSignalTests.cs` / `Official_sdk_exports_trace_named_log_and_partitioned_counter` | B | Real SDK exporters produce a trace, named correlated log and counter7 with exact resource schema/scope, kind, status and explicit resource-partition attribution. Broad integration test; separate wire tests localize failures. |
+| `TraceModelTests.cs` / `Service_calls_and_store_identity_are_derived_from_the_actual_parent_chain` | A | Concrete client/server/db chain plus unrelated trace pins exact calls, store address/port/namespace and capture-vs-selected cardinalities. |
+| `TraceModelTests.cs` / `Empty_selection_is_a_conformance_failure_and_never_a_green_empty_loop` | A | Empty selection requires IsConformant false, zero checked and one exact diagnostic. |
+| `TraceModelTests.cs` / `Definition_scoped_conformance_checks_the_declared_attribute_type` | B | 53 explicit positive/negative schema-type rows include wrong runtime types, unsupported aliases and case near-misses; count/id/diagnostics asserted. Scope deliberately excludes registry-wide conformance and enum-membership validation. |
+| `TraceModelTests.cs` / `Missing_required_deprecated_and_unknown_conditions_are_visible` | A | Required absence, present deprecated field and missing conditional field yield exact ordered issues and unevaluated condition text. |
+| `TraceModelTests.cs` / `Wrong_span_kind_is_reported_against_the_selected_definition` | A | Explicit Client versus Server contract yields the exact span.kind diagnostic and a failed result. |
+| `TraceModelTests.cs` / `Absent_non_required_attributes_do_not_fail_conformance` | A | Unspecified, recommended and opt-in missing attributes produces one checked span, no issues or unevaluated conditions and a conformant report. |
+| `TraceModelTests.cs` / `Undefined_public_requirement_level_is_rejected` | A | Public AttributeRef with undefined level99 is rejected by an exact argument exception with parameter, actual value and field identity, both with the value present and absent; original acceptance reproduced before fixing. |
+| `TraceModelTests.cs` / `Present_conditional_attribute_has_no_unresolved_requirement` | A | Present, correctly typed conditional field is conformant with one checked span and no unresolved requirement. |
+| `TraceModelTests.cs` / `Generated_http_server_definition_retains_unresolved_conditions` | A | Actual generated SemConv1.44 http.server definition accepts its required typed fields but remains non-conformant with seven exact unevaluated conditional requirements; no global conformance claim. |
+| `TransportTests.cs` / `Receiver_routes_and_media_contract_return_the_exact_status` | A | Seven HTTP route/media/encoding cases assert literal expected status, including supported protobuf parameters. |
+| `TransportTests.cs` / `Decompressed_request_limit_is_enforced_before_protobuf_parsing` | A | Real gzip expands beyond16MiB and yields413 with no accepted spans. |
+| `TransportTests.cs` / `Invalid_gzip_is_reported_as_bad_request_with_its_error_record` | A | Invalid compressed bytes yield400 and a retained parse-error receipt. |
+| `WireMetadataTests.cs` / `Complete_span_resource_scope_events_and_links_survive_in_wire_order` | A | Independent wire literals pin full span/resource/scope fields, dropped counts, flags, timestamps, event/link order, exception message and stack trace. |
+| `WireMetadataTests.cs` / `Recursive_otlp_values_keep_their_types_without_stringification` | A | Nested typed values are compared with explicit scalar, byte, array and dictionary expectations rather than a mapper-generated expected value. |
+| `WireSchemaTests.cs` / `Resource_schema_survives_the_official_sdk_and_protobuf_wire` | A | Literal null/1.44.0 schema values reach the decoded resource independently of a conflicting telemetry.schema_url attribute; exact SDK scope, span identity, kind, status and HTTP method. |
+
+All HTTP receivers bind port0 directly and are disposed. Parallel tests use invocation-local sources/meters/providers and owned request objects. Native child processes are killed and waited on in `finally`; temporary report directories are removed. No test resets another test's activity or alters compiler-generated static state.
+
+The machine-readable ledger in `eng/test-review.json` records the reviewed source hashes. Preserve real source/registry/release evidence separately; this ledger does not claim publication or100% raw Cobertura line coverage.

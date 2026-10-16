@@ -55,3 +55,13 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+.DS_Store
+.idea/
+.fallout/temp/
+
+# Retain vendored protocol sources and the maintained release entrypoints.
+!src/Qyl.Telemetry.Testing/Protos/**
+!eng/release/
+!eng/release/**
+eng/release/__pycache__/
