@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.1
+
+- Restore checkout package paths to the caller's NuGet cache before removing the isolated release cache, including the runner probes and build host. Preserve the original release failure; if cleanup restore fails, retain the cache and report failure instead of leaving dangling package paths.
+
 ## 3.0.0
 
 - Keep the testing receiver's 16 MiB default. Add a positive `maxPayloadBytes` startup argument shared by HTTP and gRPC, also available through `QylTest.TraceAsync`. Create receivers through the startup factory.

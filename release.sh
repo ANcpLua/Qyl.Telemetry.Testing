@@ -52,8 +52,33 @@ PY
 if git show-ref --verify --quiet "refs/tags/v$version"; then echo 'Release tag already exists; inspect that release instead.' >&2; exit 1; fi
 # Every release performs the required native checks; no local candidate feed is accepted.
 unset QYL_LOCAL_FEED
+previous_packages=${NUGET_PACKAGES-}
+previous_packages_set=${NUGET_PACKAGES+x}
 release_cache=$(mktemp -d "${TMPDIR:-/tmp}/qyl-testing-release-nuget.XXXXXXXX")
-trap 'rm -rf "$release_cache"' EXIT
+cleanup_release_cache() {
+  local release_status=$?
+  trap - EXIT
+  if [[ -n $previous_packages_set ]]; then
+    export NUGET_PACKAGES="$previous_packages"
+  else
+    unset NUGET_PACKAGES
+  fi
+  # Restore rewrites packageFolders, generated NuGet imports and every referenced
+  # project's assets, including the runner probes. Removing the cache first leaves
+  # otherwise valid --no-restore builds pointing at packages that no longer exist.
+  echo 'Restoring checkout package paths before removing the release cache.'
+  if dotnet restore Telemetry.Testing.slnx --source https://api.nuget.org/v3/index.json --force &&
+     dotnet restore eng/build/_build.csproj --source https://api.nuget.org/v3/index.json --force; then
+    rm -rf "$release_cache" || release_status=1
+  else
+    echo "Checkout restore failed; retained release cache: $release_cache" >&2
+    # Keep the cache while any assets might still reference it. Cleanup must not
+    # hide an earlier gate failure or turn a failed cleanup into a successful release.
+    if (( release_status == 0 )); then release_status=1; fi
+  fi
+  exit "$release_status"
+}
+trap cleanup_release_cache EXIT
 export NUGET_PACKAGES="$release_cache"
 dotnet restore Telemetry.Testing.slnx --source https://api.nuget.org/v3/index.json
 dotnet restore eng/build/_build.csproj --source https://api.nuget.org/v3/index.json

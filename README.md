@@ -7,7 +7,7 @@ links, named log events and all five metric shapes. Fully read protobuf exports 
 and points; the original payload provides the authoritative protobuf representation.
 
 The package targets .NET 10 and uses the shared `Microsoft.AspNetCore.App` framework. Its native test integration uses
-MSTest 4.5.1 and Microsoft.Testing.Platform 2.5.1. Version 3.0.0 consumes SemanticConventions 13.0.0. Application attributes keep their
+MSTest 4.5.1 and Microsoft.Testing.Platform 2.5.1. Version 3.0.1 consumes SemanticConventions 13.0.0. Application attributes keep their
 original names and types; read them through `SpanRecord.Attributes` and the typed getters.
 
 ## Capture a trace
