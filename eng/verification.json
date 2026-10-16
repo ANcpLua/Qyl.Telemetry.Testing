@@ -3,7 +3,7 @@
   "sdk": "10.0.401",
   "mstest": "4.5.1",
   "mtp": "2.5.1",
-  "status": "unpublished candidate; final native Pack passed on public dependencies with SDK1.20, all 160 tests, no inspection findings; unfiltered coverage is informational by owner decision",
+  "status": "published, publicly indexed and VERIFIED; native Pack passed all 160 tests with zero inspection findings; unfiltered coverage is informational by owner decision",
   "native_tests": {
     "passed": 160,
     "failed": 0,
@@ -185,7 +185,6 @@
     "change": "Only temporary NuGet cache relocated outside repository; no coverage settings or thresholds changed"
   },
   "pending": [
-    "Commit, push and release 1.0.0",
     "Integrate AutoInstrumentation and prototype"
   ],
   "otel_sdk": "1.20.0",
@@ -215,5 +214,13 @@
     "report": "artifacts/inspection.sarif",
     "sha256": "050ea46f3bc75b60c6dce6d0436d0507473f093449cfc2a2f85045cca4a3a214",
     "log": "artifacts/otel120-public-pack-final.log"
+  },
+  "release": {
+    "source_commit": "bba0390",
+    "tag": "v1.0.0",
+    "url": "https://github.com/ANcpLua/Qyl.Telemetry.Testing/releases/tag/v1.0.0",
+    "public_package": "https://www.nuget.org/packages/Qyl.Telemetry.Testing/1.0.0",
+    "native_verification": "artifacts/release-1.0.0-verify.log",
+    "result": "VERIFIED; public-only restore and live receiver smoke passed"
   }
 }

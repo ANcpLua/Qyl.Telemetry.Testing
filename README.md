@@ -2,7 +2,7 @@
 
 Capture OTLP telemetry inside a .NET test and inspect what was exported. The receiver accepts traces, logs and metrics over OTLP/HTTP protobuf, including gzip. It keeps typed values, resource and scope metadata, ordered span events and links, named log events and all five metric shapes.
 
-The package targets .NET 10 and uses the shared `Microsoft.AspNetCore.App` framework. Its native test integration uses MSTest 4.5.1 and Microsoft.Testing.Platform 2.5.1. Version 1.0.0 is being prepared; publication is a separate release step.
+The package targets .NET 10 and uses the shared `Microsoft.AspNetCore.App` framework. Its native test integration uses MSTest 4.5.1 and Microsoft.Testing.Platform 2.5.1. Version 1.0.0 is published on NuGet; its native release verifier restored it from the public feed and passed the live receiver consumer smoke.
 
 ## Capture a trace
 

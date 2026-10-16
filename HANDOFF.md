@@ -1,6 +1,6 @@
-# Qyl.Telemetry.Testing 1.0.0 candidate
+# Qyl.Telemetry.Testing 1.0.0
 
-The primary owns this repository. All agents are finished. SemanticConventions 11.0.0 is publicly indexed and its producer release is VERIFIED at commit 2142f58. Testing restores that public package from a fresh public-only cache. OpenTelemetry test exporters are now 1.20.0; the final native Pack gate passed in artifacts/otel120-public-pack-final.log. Testing1.0.0 is not published or tagged yet.
+The primary owns this repository. All agents are finished. SemanticConventions 11.0.0 is publicly indexed and its producer release is VERIFIED at commit 2142f58. Testing restores that public package from a fresh public-only cache. OpenTelemetry test exporters are now 1.20.0; the final native Pack gate passed in artifacts/otel120-public-pack-final.log. Testing 1.0.0 is published and publicly indexed at source bba0390. The native detached verifier finished with VERIFIED after a public-only restore and a live consumer smoke; evidence is artifacts/release-1.0.0-verify.log.
 
 ## Implementation
 
@@ -14,7 +14,7 @@ The build now uses Fallout's native injected solution and no CA1822 suppression.
 
 The public-only run passed 160 tests but failed the original blanket 100% gate: full coverage was 4603/7479 lines and 493/1608 branches. Matching local PDBs caused SemanticConventions to be instrumented, whereas the earlier local candidate's PDB did not match. Exact CodeView/PDB evidence is artifacts/catalog-symbol-provenance-verified.log. The full failed report is retained under artifacts/public-coverage-with-dependency-symbols. No symbol or binary was removed or modified to improve coverage.
 
-On 2026-10-16 the owner explicitly removed blanket library100% requirements in favor of qyl business rules, invariants and useful tests. The native build retains all unfiltered measurements through the published DotCov parser/report API; it fails unreadable or missing coverage, failing tests and any INFO-or-higher inspection finding. It does not label informational coverage as a threshold pass.
+On 2026-10-16 the owner explicitly removed blanket library 100% requirements in favor of qyl business rules, invariants and useful tests. The native build retains all unfiltered measurements through the published DotCov parser/report API; it fails unreadable or missing coverage, failing tests and any INFO-or-higher inspection finding. It does not label informational coverage as a threshold pass.
 
 Testing's 1110/1110 physical lines and 452/452 branches are a package breakdown, not the combined report. Raw Cobertura has 1185 class-line entries, 1169 hit. Each of 16 unhit generated parser-factory entries shares a hit physical initializer line. This does not claim those factory bodies executed. Both raw and physical counts remain visible. No coverage exclusion or constructor-touching test was added.
 
@@ -22,5 +22,4 @@ The reviewed source ledger is eng/test-review.json and TEST-REVIEW.md. The nativ
 
 ## Remaining work
 
-1. Commit and push the verified current source; release 1.0.0 through release.sh and wait for native VERIFIED.
-2. Integrate the package into AutoInstrumentation's native MSTest demo lanes and the live prototype. No PR or worktree is needed.
+1. Integrate the package into AutoInstrumentation's native MSTest demo lanes and the live prototype. No PR or worktree is needed.
