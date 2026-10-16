@@ -2,6 +2,8 @@
 
 ## 1.1.0
 
+- Consume SemanticConventions 12.0.0, including the verified Oracle duration wire-type correction.
+
 - Return typed protobuf Status errors and useful diagnostic messages for malformed, oversized and unsupported OTLP/HTTP requests, preserving the request's supported response encoding.
 - Handle profiling-only string-table references as non-fatal empty values with retained warnings, rather than dereferencing a missing map. Keep literal keys when present and ignore unresolved indexed keys.
 - Preserve each uncompressed protobuf export before decoding, including unknown fields and records rejected by the decoder. Snapshot membership remains stable.

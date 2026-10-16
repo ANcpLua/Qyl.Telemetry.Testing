@@ -1,19 +1,19 @@
-# Qyl.Telemetry.Testing1.1.0 candidate;1.0.0 published
+# Qyl.Telemetry.Testing 1.1.0 candidate; 1.0.0 published
 
-The primary owns this repository. All agents are finished. SemanticConventions 11.0.0 is publicly indexed and its
-producer release is VERIFIED at commit 2142f58. Testing restores that public package from a fresh public-only cache.
+The primary owns this repository. All agents are finished. SemanticConventions 12.0.0 is publicly indexed and its
+producer release is VERIFIED at commit b7285bb. Testing restores that public package from a fresh public-only cache.
 OpenTelemetry test exporters are now 1.20.0; the final native Pack gate passed in
-artifacts/otel120-public-pack-final.log. Testing 1.0.0 is published and publicly indexed at source bba0390. The native
+artifacts/semconv12-diagnostics-pack-2.log. Testing 1.0.0 is published and publicly indexed at source bba0390. The native
 detached verifier finished with VERIFIED after a public-only restore and a live consumer smoke; evidence is
 artifacts/release-1.0.0-verify.log.
 
 ## Current candidate
 
-The owner formatting is preserved in main fcb51c2. Candidate1.1.0 fixes empty metric data in diagnostic JSON, retains
+The owner formatting is preserved in main fcb51c2. Candidate 1.1.0 fixes empty metric data in diagnostic JSON, retains
 uncompressed original protobuf export payloads before decoding, returns official Google protobuf Status HTTP errors,
-and treats profiling-only string/key table references as non-fatal warnings. Native Pack passed168tests, no failures
-or skips, and zero INFO-or-higher findings (artifacts/otlp-diagnostics-pack.log). The packed consumer passed the new
-payload, metric JSON and decoded error checks (artifacts/otlp-diagnostics-smoke.log). A declared oversize request is
+and treats profiling-only string/key table references as non-fatal warnings. Native Pack passed 168 tests, no failures
+or skips, and zero INFO-or-higher findings (artifacts/semconv12-diagnostics-pack-2.log). The packed consumer passed the new
+payload, metric JSON and decoded error checks (artifacts/semconv12-diagnostics-smoke.log). A declared oversize request is
 verified using Expect100-continue; eager oversized HTTP1 uploads can still surface a socket broken pipe while Kestrel
 closes the rejected body. No failed attempt or raw coverage was hidden. Publication is pending the current producer wave.
 

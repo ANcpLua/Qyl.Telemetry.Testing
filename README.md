@@ -7,8 +7,8 @@ links, named log events and all five metric shapes. Fully read protobuf exports 
 and points; the original payload provides the authoritative protobuf representation.
 
 The package targets .NET 10 and uses the shared `Microsoft.AspNetCore.App` framework. Its native test integration uses
-MSTest 4.5.1 and Microsoft.Testing.Platform 2.5.1. The 1.1.0 candidate adds diagnostic capture fidelity and OTLP
-error handling. Version 1.0.0 remains the verified published baseline until the new native release completes.
+MSTest 4.5.1 and Microsoft.Testing.Platform 2.5.1. Version 1.1.0 adds diagnostic capture fidelity and OTLP
+error handling.
 
 ## Capture a trace
 

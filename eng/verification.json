@@ -3,12 +3,12 @@
   "sdk": "10.0.401",
   "mstest": "4.5.1",
   "mtp": "2.5.1",
-  "status": "local candidate verified by native Pack and packed consumer;1.0.0 remains the published VERIFIED baseline until native1.1.0 release completes",
+  "status": "Native Pack and packed consumer passed on public SemanticConventions 12.0.0; native 1.1.0 publication is pending.",
   "native_tests": {
     "passed": 168,
     "failed": 0,
     "skipped": 0,
-    "log": "artifacts/otlp-diagnostics-pack.log",
+    "log": "artifacts/semconv12-diagnostics-pack-2.log",
     "earlier_clean_source_archive_log": "artifacts/source-audit.log",
     "earlier_archive_scope": "127 tests before registry audit; not verification of the current source",
     "source_scope": "Includes typed OTLP errors, non-fatal profiling references, original export payloads and complete polymorphic metric diagnostic JSON."
@@ -145,17 +145,16 @@
   },
   "dependency": {
     "package": "Qyl.Telemetry.SemanticConventions",
-    "version": "11.0.0",
-    "public_source_commit": "2142f58",
-    "public_nupkg_sha256": "b0c3c288beb28c55c7c4c57b57ad93569a93435669cf2f538391dd813409e7b6",
-    "public_only_restore_log": "artifacts/catalog-public-restore.log",
-    "public_availability": "published and verified by native producer release at 2026-10-16T16:41:50Z",
-    "symbol_provenance": "artifacts/catalog-symbol-provenance-verified.log",
-    "finding": "Public DLL CodeView d78a6521-13b6-44bd-ab4e-ca1abd7b4842 matches the local producer PDB; the earlier local candidate CodeView 0a3f22ec-6fe9-4eaf-a77c-95b95ea79414 does not."
+    "version": "12.0.0",
+    "public_source_commit": "b7285bb3302bc11f0d699a33e475fb843a78f853",
+    "public_nupkg_sha256": "6c90a8563a18736ff4265b60c88d71dde8728061cb9e42bc2bb81b4ea171150f",
+    "public_availability": "Producer native release VERIFIED at 2026-10-16T18:28:23Z",
+    "public_restore_and_gate_log": "artifacts/semconv12-diagnostics-pack-2.log",
+    "scope": "The Oracle duration registry entry now describes the observed string wire representation without inventing a numeric unit."
   },
   "packed_consumer": {
     "status": "passed",
-    "log": "artifacts/otlp-diagnostics-smoke.log",
+    "log": "artifacts/semconv12-diagnostics-smoke.log",
     "sdk_exporter": "1.20.0",
     "scope": "Real SDK correlated signals plus full metric JSON, original payloads and a decoded Google Status error from the packed candidate."
   },
@@ -206,7 +205,7 @@
     "gated_by_percentage": false,
     "raw_report": "artifacts/coverage/coverage.cobertura.xml",
     "dotcov_json": "artifacts/coverage/coverage.json",
-    "native_log": "artifacts/otlp-diagnostics-pack.log",
+    "native_log": "artifacts/semconv12-diagnostics-pack-2.log",
     "summary": {
       "lineRate": 61.76,
       "branchRate": 30.71,
@@ -221,8 +220,8 @@
     "findings": 0,
     "severity": "INFO",
     "report": "artifacts/inspection.sarif",
-    "sha256": "0db8f310863ff2efbaedabb3edb5f18e1beb5af7c676af2dc5c33adec32af989",
-    "log": "artifacts/otlp-diagnostics-pack.log"
+    "sha256": "479eb677bbae50cb6c6e079065d568efc0c9c9e5c2f68dc768d25fba5f84fff6",
+    "log": "artifacts/semconv12-diagnostics-pack-2.log"
   },
   "release": {
     "source_commit": "bba0390",
@@ -233,5 +232,15 @@
     "result": "VERIFIED; public-only restore and live receiver smoke passed",
     "baseline_version": "1.0.0",
     "candidate_version": "1.1.0"
+  },
+  "previous_dependency_symbol_audit": {
+    "package": "Qyl.Telemetry.SemanticConventions",
+    "version": "11.0.0",
+    "public_source_commit": "2142f58",
+    "public_nupkg_sha256": "b0c3c288beb28c55c7c4c57b57ad93569a93435669cf2f538391dd813409e7b6",
+    "public_only_restore_log": "artifacts/catalog-public-restore.log",
+    "public_availability": "published and verified by native producer release at 2026-10-16T16:41:50Z",
+    "symbol_provenance": "artifacts/catalog-symbol-provenance-verified.log",
+    "finding": "Public DLL CodeView d78a6521-13b6-44bd-ab4e-ca1abd7b4842 matches the local producer PDB; the earlier local candidate CodeView 0a3f22ec-6fe9-4eaf-a77c-95b95ea79414 does not."
   }
 }
