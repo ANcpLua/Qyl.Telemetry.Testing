@@ -62,6 +62,7 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
     ns={'n':'http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd'}
     assert manifest.findtext('n:metadata/n:version', namespaces=ns) == sys.argv[2]
 PYZIP
+./eng/release/smoke.sh "$version" "$PWD/artifacts/packages-release"
 key_file="$HOME/.config/vitals/nuget-qyl-manual-publish-key"
 [[ -s $key_file ]] || { echo "Missing NuGet credential registered in Vitals: $key_file" >&2; exit 1; }
 dotnet nuget push "$package" --source https://api.nuget.org/v3/index.json --api-key "$(<"$key_file")"

@@ -28,8 +28,7 @@
         "Compile",
         "Coverage",
         "InspectCode",
-        "Pack",
-        "ReportCoverage"
+        "Pack"
       ]
     },
     "Verbosity": {
@@ -110,45 +109,9 @@
   "allOf": [
     {
       "properties": {
-        "CoverageBadgeDirectory": {
+        "_solution": {
           "type": "string",
-          "description": "Directory, relative to the root, to write coverage-badge.svg and coverage-badge.json to; empty = no badge"
-        },
-        "CoverageExcludeExternalParam": {
-          "type": "string",
-          "description": "Exclude code built elsewhere: SourceLink paths (/_/...) of dependencies the coverage tool instrumented (true/false)"
-        },
-        "CoverageExcludeGeneratedParam": {
-          "type": "string",
-          "description": "Exclude generated files, migrations, GlobalUsings.cs, Program.cs (true/false)"
-        },
-        "CoverageExcludeTestCodeParam": {
-          "type": "string",
-          "description": "Exclude test projects and fixtures: *.Tests/, TestSupport/, TestFixtures/ (true/false)"
-        },
-        "CoverageFormat": {
-          "type": "string",
-          "description": "Output format: table, json, markdown (md)"
-        },
-        "CoverageJsonPath": {
-          "type": "string",
-          "description": "File, relative to the root, to also write the JSON report with its gate to, for every outcome; empty = none"
-        },
-        "CoverageMaxCharsParam": {
-          "type": "string",
-          "description": "Per-file XML character cap; 0 = no cap"
-        },
-        "CoveragePattern": {
-          "type": "string",
-          "description": "Report file name pattern: 'filename' or '**/filename' (gcovr and coverage.py emit coverage.xml)"
-        },
-        "CoverageProbeSourcesParam": {
-          "type": "string",
-          "description": "Resolve a relative filename under several <source> roots against the root that holds it on this machine's disk (true/false)"
-        },
-        "CoverageSourceRoot": {
-          "type": "string",
-          "description": "Resolve a relative filename under several <source> roots against this declared root"
+          "description": "Path to a solution file that is automatically loaded. Default is Telemetry.Testing.slnx"
         }
       }
     },

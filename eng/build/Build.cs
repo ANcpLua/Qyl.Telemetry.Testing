@@ -1,35 +1,42 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using DotCov.Fallout;
+using DotCov;
+using DotCov.Formatters;
+using Serilog;
 using Fallout.Common;
 using Fallout.Common.IO;
 using Fallout.Common.Tooling;
 using Fallout.Common.Tools.DotNet;
+using Fallout.Solutions;
 using JetBrains.Annotations;
 using static Fallout.Common.Tools.DotNet.DotNetTasks;
 
 namespace _build;
 
 [UsedImplicitly]
-internal sealed class Build : FalloutBuild, ICoverageReport
+internal sealed class Build : FalloutBuild
 {
     public static int Main() => Execute<Build>(x => x.Check);
-    private static AbsolutePath Solution => RootDirectory / "Telemetry.Testing.slnx";
+    [Solution("Telemetry.Testing.slnx", GenerateProjects = false)]
+    private readonly Solution _solution = null!;
     private static AbsolutePath Tests => RootDirectory / "tests/Qyl.Telemetry.Testing.Tests/Qyl.Telemetry.Testing.Tests.csproj";
     private static AbsolutePath CoverageDirectory => RootDirectory / "artifacts/coverage";
-    string ICoverageReport.MinLine => "100";
-    string ICoverageReport.MinBranch => "100";
-    AbsolutePath ICoverageReport.CoverageSearchDirectory => CoverageDirectory;
 
     [UsedImplicitly]
-    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Fallout discovers instance Target properties; a static target cannot be invoked by its CLI.")]
-    private Target Compile => target => target.Executes(() => DotNetBuild(s => s.SetProjectFile(Solution)
+    private Target Compile => target => target.Executes(() => DotNetBuild(s => s.SetProjectFile(_solution)
         .SetConfiguration("Release").EnableNoRestore().SetProcessAdditionalArguments("-m:4")));
 
-    private Target Coverage => target => target.DependsOn(Compile).Triggers<ICoverageReport>(x => x.ReportCoverage).Executes(() =>
+    private Target Coverage => target => target.DependsOn(Compile).Executes(() =>
     {
         CoverageDirectory.CreateOrCleanDirectory();
         DotNet($"test --project \"{Tests}\" -c Release --no-build --no-restore --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml --report-trx --results-directory \"{CoverageDirectory}\"");
+        var inputs = ReportResolver.Resolve(CoverageDirectory);
+        Log.Information("Coverage inputs: {Inputs}", inputs.Select(input => input.SourceName));
+        var report = CoberturaParser.Parse(inputs);
+        if (report.Files.Count == 0) throw new InvalidOperationException("The test run produced no coverage measurements.");
+        foreach (var warning in report.Warnings)
+            Log.Warning("Coverage: {Warning}", warning.Detail);
+        Log.Information("Unfiltered coverage (informational):\n{Report}", TableFormatter.Format(report));
+        File.WriteAllText(CoverageDirectory / "coverage.json", JsonFormatter.Format(report));
     });
 
     private Target InspectCode => target => target.DependsOn(Compile).Executes(() =>

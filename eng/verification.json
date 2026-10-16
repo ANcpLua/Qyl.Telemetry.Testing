@@ -1,138 +1,163 @@
 {
-  "status": "local candidate; not published; push held for public dependency verification",
   "version": "1.0.0",
   "sdk": "10.0.401",
   "mstest": "4.5.1",
   "mtp": "2.5.1",
+  "status": "unpublished candidate; final native Pack passed on public dependencies with SDK1.20, all 160 tests, no inspection findings; unfiltered coverage is informational by owner decision",
   "native_tests": {
-    "passed": 127,
+    "passed": 160,
     "failed": 0,
     "skipped": 0,
-    "log": "artifacts/final-pack-gate.log",
-    "clean_source_archive_log": "artifacts/source-audit.log"
+    "log": "artifacts/otel120-public-pack-final.log",
+    "earlier_clean_source_archive_log": "artifacts/source-audit.log",
+    "earlier_archive_scope": "127 tests before registry audit; not verification of the current source",
+    "source_scope": "current source includes registry audit, native build solution injection and SDK1.20 log scope version/schema assertions"
   },
-  "native_dotcov_gate": {
-    "status": "passed",
+  "unrestricted_native_dotcov_gate": {
+    "status": "historical failed 100% gate, retained before the explicit owner policy change",
     "lines": [
-      1019,
-      1019
+      4603,
+      7479
     ],
     "branches": [
-      360,
-      360
+      493,
+      1608
     ],
     "minimum_lines": 100,
-    "minimum_branches": 100
-  },
-  "raw_cobertura": {
-    "path": "artifacts/coverage/coverage.cobertura.xml",
-    "sha256": "12a4233bee14520ed88aabb0fb595f47f94c34ab3b814a3aa110a3aaae95f338",
-    "attributes": {
-      "line-rate": "0.985239852398524",
-      "branch-rate": "1",
-      "complexity": "478",
-      "version": "1.9",
-      "timestamp": "1792166116",
-      "lines-covered": "1068",
-      "lines-valid": "1084",
-      "branches-covered": "360",
-      "branches-valid": "360"
-    },
-    "uncovered_generated_factory_lines": [
+    "minimum_branches": 100,
+    "log": "artifacts/catalog-public-pack-gate.log",
+    "raw_report": "artifacts/public-coverage-with-dependency-symbols/coverage.cobertura.xml",
+    "raw_report_sha256": "400c17fccb16ef1f93d8b46685c33d483eb58b464809f59beb8a8145caae48e1",
+    "package_accounting": [
       {
-        "class": "OpenTelemetry.Proto.Trace.V1.TracesData.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/trace/v1/Trace.cs",
-        "line": 151
+        "package": "Qyl.Telemetry.Testing",
+        "physical_lines": 1110,
+        "covered_physical_lines": 1110,
+        "class_line_entries": 1185,
+        "covered_class_line_entries": 1169,
+        "uncovered_generated_entries_on_executed_physical_lines": [
+          {
+            "class": "OpenTelemetry.Proto.Trace.V1.TracesData.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/trace/v1/Trace.cs",
+            "line": 151
+          },
+          {
+            "class": "OpenTelemetry.Proto.Trace.V1.Status.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/trace/v1/Trace.cs",
+            "line": 2566
+          },
+          {
+            "class": "OpenTelemetry.Proto.Resource.V1.Resource.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/resource/v1/Resource.cs",
+            "line": 56
+          },
+          {
+            "class": "OpenTelemetry.Proto.Metrics.V1.MetricsData.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/metrics/v1/Metrics.cs",
+            "line": 276
+          },
+          {
+            "class": "OpenTelemetry.Proto.Metrics.V1.Gauge.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/metrics/v1/Metrics.cs",
+            "line": 1756
+          },
+          {
+            "class": "OpenTelemetry.Proto.Metrics.V1.Sum.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/metrics/v1/Metrics.cs",
+            "line": 1951
+          },
+          {
+            "class": "OpenTelemetry.Proto.Metrics.V1.Histogram.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/metrics/v1/Metrics.cs",
+            "line": 2227
+          },
+          {
+            "class": "OpenTelemetry.Proto.Metrics.V1.ExponentialHistogram.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/metrics/v1/Metrics.cs",
+            "line": 2463
+          },
+          {
+            "class": "OpenTelemetry.Proto.Metrics.V1.Summary.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/metrics/v1/Metrics.cs",
+            "line": 2706
+          },
+          {
+            "class": "OpenTelemetry.Proto.Logs.V1.LogsData.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/logs/v1/Logs.cs",
+            "line": 155
+          },
+          {
+            "class": "OpenTelemetry.Proto.Common.V1.ArrayValue.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/common/v1/Common.cs",
+            "line": 712
+          },
+          {
+            "class": "OpenTelemetry.Proto.Common.V1.KeyValueList.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/common/v1/Common.cs",
+            "line": 909
+          },
+          {
+            "class": "OpenTelemetry.Proto.Common.V1.InstrumentationScope.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/common/v1/Common.cs",
+            "line": 1415
+          },
+          {
+            "class": "OpenTelemetry.Proto.Collector.Trace.V1.ExportTracePartialSuccess.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/collector/trace/v1/TraceService.cs",
+            "line": 481
+          },
+          {
+            "class": "OpenTelemetry.Proto.Collector.Metrics.V1.ExportMetricsPartialSuccess.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/collector/metrics/v1/MetricsService.cs",
+            "line": 482
+          },
+          {
+            "class": "OpenTelemetry.Proto.Collector.Logs.V1.ExportLogsPartialSuccess.<>c",
+            "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/collector/logs/v1/LogsService.cs",
+            "line": 480
+          }
+        ]
       },
       {
-        "class": "OpenTelemetry.Proto.Trace.V1.Status.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/trace/v1/Trace.cs",
-        "line": 2566
-      },
-      {
-        "class": "OpenTelemetry.Proto.Resource.V1.Resource.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/resource/v1/Resource.cs",
-        "line": 56
-      },
-      {
-        "class": "OpenTelemetry.Proto.Metrics.V1.MetricsData.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/metrics/v1/Metrics.cs",
-        "line": 276
-      },
-      {
-        "class": "OpenTelemetry.Proto.Metrics.V1.Gauge.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/metrics/v1/Metrics.cs",
-        "line": 1756
-      },
-      {
-        "class": "OpenTelemetry.Proto.Metrics.V1.Sum.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/metrics/v1/Metrics.cs",
-        "line": 1951
-      },
-      {
-        "class": "OpenTelemetry.Proto.Metrics.V1.Histogram.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/metrics/v1/Metrics.cs",
-        "line": 2227
-      },
-      {
-        "class": "OpenTelemetry.Proto.Metrics.V1.ExponentialHistogram.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/metrics/v1/Metrics.cs",
-        "line": 2463
-      },
-      {
-        "class": "OpenTelemetry.Proto.Metrics.V1.Summary.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/metrics/v1/Metrics.cs",
-        "line": 2706
-      },
-      {
-        "class": "OpenTelemetry.Proto.Logs.V1.LogsData.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/logs/v1/Logs.cs",
-        "line": 155
-      },
-      {
-        "class": "OpenTelemetry.Proto.Common.V1.ArrayValue.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/common/v1/Common.cs",
-        "line": 712
-      },
-      {
-        "class": "OpenTelemetry.Proto.Common.V1.KeyValueList.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/common/v1/Common.cs",
-        "line": 909
-      },
-      {
-        "class": "OpenTelemetry.Proto.Common.V1.InstrumentationScope.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/common/v1/Common.cs",
-        "line": 1415
-      },
-      {
-        "class": "OpenTelemetry.Proto.Collector.Trace.V1.ExportTracePartialSuccess.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/collector/trace/v1/TraceService.cs",
-        "line": 481
-      },
-      {
-        "class": "OpenTelemetry.Proto.Collector.Metrics.V1.ExportMetricsPartialSuccess.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/collector/metrics/v1/MetricsService.cs",
-        "line": 482
-      },
-      {
-        "class": "OpenTelemetry.Proto.Collector.Logs.V1.ExportLogsPartialSuccess.<>c",
-        "source": "/Users/alexandernachtmann/RiderProjects/Qyl.Telemetry.Testing/src/Qyl.Telemetry.Testing/obj/Release/net10.0/opentelemetry/proto/collector/logs/v1/LogsService.cs",
-        "line": 480
+        "package": "Qyl.Telemetry.SemanticConventions",
+        "physical_lines": 6369,
+        "covered_physical_lines": 3493,
+        "class_line_entries": 6370,
+        "covered_class_line_entries": 3493,
+        "uncovered_generated_entries_on_executed_physical_lines": []
       }
-    ]
+    ],
+    "source_accounting_evidence": "artifacts/catalog-physical-line-accounting.json",
+    "policy_changes": "none; no filters, exclusions or threshold changes"
   },
-  "candidate_dependency": {
+  "earlier_local_candidate_gate": {
+    "status": "passed",
+    "lines": [
+      1110,
+      1110
+    ],
+    "branches": [
+      452,
+      452
+    ],
+    "log": "artifacts/catalog-pack-corrected.log",
+    "limitation": "The old local dependency DLL did not match the current local PDB, so SemanticConventions was not instrumented; this is not a pass for the public combined gate."
+  },
+  "dependency": {
     "package": "Qyl.Telemetry.SemanticConventions",
     "version": "11.0.0",
-    "source_commit": "0c96f601cf81f767682ff5b0b4bed107806fd1f7",
-    "sha256": "8f1446f32eec84e06b89f5c01d576f64e1613a6b1639fc429d32e76af5a408c8",
-    "public_availability": "unverified; producer publication held"
+    "public_source_commit": "2142f58",
+    "public_nupkg_sha256": "b0c3c288beb28c55c7c4c57b57ad93569a93435669cf2f538391dd813409e7b6",
+    "public_only_restore_log": "artifacts/catalog-public-restore.log",
+    "public_availability": "published and verified by native producer release at 2026-10-16T16:41:50Z",
+    "symbol_provenance": "artifacts/catalog-symbol-provenance-verified.log",
+    "finding": "Public DLL CodeView d78a6521-13b6-44bd-ab4e-ca1abd7b4842 matches the local producer PDB; the earlier local candidate CodeView 0a3f22ec-6fe9-4eaf-a77c-95b95ea79414 does not."
   },
-  "local_package": {
-    "path": "artifacts/packages-release/Qyl.Telemetry.Testing.1.0.0.nupkg",
-    "sha256": "9c3b51f5db629275dcc9c36092684a15c6680019db0ab21677eaa98d326d6018",
-    "consumer_smoke": "artifacts/final-package-smoke.log",
-    "source_state": "candidate working tree before local main commit"
+  "packed_consumer": {
+    "status": "passed",
+    "log": "artifacts/otel120-package-smoke.log",
+    "sdk_exporter": "1.20.0",
+    "scope": "Real correlated span, named log with explicit scope version/schema, partitioned counter, registry audit and retained malformed-request error; local Testing package and public dependencies."
   },
   "baseline": {
     "path": "artifacts/delegate-cache-baseline",
@@ -160,19 +185,35 @@
     "change": "Only temporary NuGet cache relocated outside repository; no coverage settings or thresholds changed"
   },
   "pending": [
-    "Public-only SemConv11 restore before push",
-    "Primary decision on raw generated-factory line accounting"
+    "Commit, push and release 1.0.0",
+    "Integrate AutoInstrumentation and prototype"
   ],
+  "otel_sdk": "1.20.0",
+  "policy": {
+    "owner_decision": "2026-10-16: coverage targets focus on qyl business rules and invariants, not blanket 100% library or dependency coverage",
+    "test_and_inspection_gate": "all native tests pass, zero INFO-or-higher inspection findings",
+    "coverage": "informational unfiltered DotCov report; unreadable or missing measurements still fail",
+    "exclusions": "none"
+  },
+  "current_coverage": {
+    "lines": [
+      4603,
+      7479
+    ],
+    "branches": [
+      493,
+      1608
+    ],
+    "gated_by_percentage": false,
+    "raw_report": "artifacts/coverage/coverage.cobertura.xml",
+    "dotcov_json": "artifacts/coverage/coverage.json",
+    "native_log": "artifacts/otel120-public-pack-final.log"
+  },
   "inspection": {
     "findings": 0,
     "severity": "INFO",
-    "projects": [
-      "library",
-      "tests",
-      "owned probes",
-      "build host"
-    ],
     "report": "artifacts/inspection.sarif",
-    "sha256": "bd2aa9baee27e3dbcafb4fb600ed973141e07ce9b75169b3a247664b29a30c1c"
+    "sha256": "050ea46f3bc75b60c6dce6d0436d0507473f093449cfc2a2f85045cca4a3a214",
+    "log": "artifacts/otel120-public-pack-final.log"
   }
 }

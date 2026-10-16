@@ -1,36 +1,26 @@
 # Qyl.Telemetry.Testing 1.0.0 candidate
 
-The package is implemented and locally verified. Publication is held. The consumer pins SemanticConventions 11.0.0, whose coordinated public release must be available before the push and a public-only restore check.
+The primary owns this repository. All agents are finished. SemanticConventions 11.0.0 is publicly indexed and its producer release is VERIFIED at commit 2142f58. Testing restores that public package from a fresh public-only cache. OpenTelemetry test exporters are now 1.20.0; the final native Pack gate passed in artifacts/otel120-public-pack-final.log. Testing1.0.0 is not published or tagged yet.
 
 ## Implementation
 
-- Real loopback Kestrel receiver for OTLP/HTTP protobuf traces, logs and all five metric shapes; gzip and bounded request bodies.
-- Official OpenTelemetry proto 1.11.1, pinned commit and eight source hashes. DTOs are internal; the Apache license is included in the NuGet archive.
-- Canonical SemConv span/resource/scope records, ordered events/links, typed values and exact nanoseconds, flags, dropped counts and named logs.
-- Trace-isolated capture, condition waits, disposal/cancellation, explicit resource-partition or exemplar metric attribution, service calls, stores and observed session IDs.
-- Native MSTest wrapper preserving original attributes/results. Consumer global hooks live in its own test assembly. Real child runner tests prove failures, row identities, durations and source navigation.
-- Explicit definition-scoped conformance. Invalid public requirement levels now throw an argument error; the earlier erroneous acceptance is reproduced in `artifacts/undefined-requirement-baseline.log`. Arbitrary conditional text, enum membership and span-name matching are not claimed as validated.
+The receiver captures actual loopback OTLP/HTTP protobuf/gzip traces, named logs and all five metric shapes. It preserves exact typed values, resource/scope schema and loss metadata, flags, nanoseconds, ordered events/links and exemplars. Official proto 1.11.1 sources, hashes and licensing remain intact. Canonical span/resource/scope models come from the public conventions package.
 
-## Verification and provenance
+Native MSTest integration delegates to the original attributes/results and keeps global hooks in the consuming assembly. Owned child processes verify data rows, failures, durations and actual discovery locations. Trace selection never filters raw capture; metric attribution needs an explicit partition or exemplar. Definition-scoped conformance and registry audits have different contracts: the latter checks observed types, units and lifecycle facts, lists valid custom names separately, and reports deprecation as improvement advice. It never invents scope ownership, global required attributes, closed enums or SDK instrument identity from aggregations.
 
-The current exact results, source hashes and known raw coverage differences are in `eng/verification.json`, `eng/test-review.json` and `TEST-REVIEW.md`. The native full gate is `artifacts/final-pack-gate.log`; the separate clean staged-source run is `artifacts/source-audit.log`; the isolated NuGet consumer is `artifacts/local-package-smoke.log`.
+The build now uses Fallout's native injected solution and no CA1822 suppression. Packed consumers exercise actual SDK traces, named logs and partitioned counters, plus malformed-request evidence; they pin the repository SDK in the isolated directory. Native release runs that consumer before publication as well as after indexing.
 
-The verified SemConv candidate is from commit 0c96f601cf81f767682ff5b0b4bed107806fd1f7, SHA256 8f1446f32eec84e06b89f5c01d576f64e1613a6b1639fc429d32e76af5a408c8. A later producer README-only candidate and the primary's catalog work are separate inputs; do not describe them as covered by these results. The final consumer check must restore the public 11.0.0 package and repeat relevant gates.
+## Measurement and verification
 
-The temporary package cache is `/private/tmp/qyl-testing-nuget-final-20261016`. Its earlier location under `artifacts/` artificially expanded coverage to include the packaged SemConv assembly. Moving only that temporary cache outside the repository restored the native scope; no coverage filter or threshold was added or changed. The broad report is retained in `artifacts/coverage-with-in-repo-cache`.
+The public-only run passed 160 tests but failed the original blanket 100% gate: full coverage was 4603/7479 lines and 493/1608 branches. Matching local PDBs caused SemanticConventions to be instrumented, whereas the earlier local candidate's PDB did not match. Exact CodeView/PDB evidence is artifacts/catalog-symbol-provenance-verified.log. The full failed report is retained under artifacts/public-coverage-with-dependency-symbols. No symbol or binary was removed or modified to improve coverage.
 
-The original shared method-group cache evidence is retained in `artifacts/delegate-cache-baseline`: source, DLL, PDB, raw Cobertura, build log and exact IL/PDB sequence points. Gauge and Sum originally loaded the same `<1>__Number` field twice. The current decoder shares their actual numeric-point transformation. There is no claim that the original gap was a DotCov parser bug.
+On 2026-10-16 the owner explicitly removed blanket library100% requirements in favor of qyl business rules, invariants and useful tests. The native build retains all unfiltered measurements through the published DotCov parser/report API; it fails unreadable or missing coverage, failing tests and any INFO-or-higher inspection finding. It does not label informational coverage as a threshold pass.
 
-The raw Cobertura report still lists 16 unexecuted generated protobuf parser factories. Native DotCov aggregation has different generated-code accounting. Both counts are recorded; do not replace raw counts with the native summary. No constructor-only tests or private-state resets were added for these factories.
+Testing's 1110/1110 physical lines and 452/452 branches are a package breakdown, not the combined report. Raw Cobertura has 1185 class-line entries, 1169 hit. Each of 16 unhit generated parser-factory entries shares a hit physical initializer line. This does not claim those factory bodies executed. Both raw and physical counts remain visible. No coverage exclusion or constructor-touching test was added.
 
-One scoped CA1822 suppression is on the build host's Compile property: Fallout requires an instance Target; changing it to static made the real CLI fail with `Sequence contains no matching element`. The normal reflection-use annotation and the explicit justification preserve the required runtime contract. This does not suppress coverage.
-
-The unchanged vendored protocol contains four upstream whitespace findings from `git diff --check`; all other staged files pass the check. Preserve the exact upstream bytes and hashes.
+The reviewed source ledger is eng/test-review.json and TEST-REVIEW.md. The native SDK 1.20 Pack gate and packed consumer passed; current evidence is recorded in eng/verification.json. The older 127-case source-archive run only covers its earlier source. Vendored proto whitespace is preserved verbatim.
 
 ## Remaining work
 
-1. Finish the coordinated public SemanticConventions 11 release and verify this consumer against that exact package from a fresh public-only cache.
-2. Push the local main commit after that check. No PR or worktree is needed.
-3. The primary decides any final generated-code coverage policy, integrates the package into the live prototype/AutoInstrumentation, and publishes 1.0.0 through `release.sh` when the stack is ready.
-
-No package was published, no release tag was created and no Vitals credential value was read. Live prototype and AutoInstrumentation files were not changed by this assignment.
+1. Commit and push the verified current source; release 1.0.0 through release.sh and wait for native VERIFIED.
+2. Integrate the package into AutoInstrumentation's native MSTest demo lanes and the live prototype. No PR or worktree is needed.

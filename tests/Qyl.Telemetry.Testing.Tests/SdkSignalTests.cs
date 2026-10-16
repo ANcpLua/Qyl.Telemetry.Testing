@@ -35,8 +35,12 @@ public sealed class SdkSignalTests
                 using var meter = new Meter(sourceName, "2.0.1");
                 using var metrics = Sdk.CreateMeterProviderBuilder().AddMeter(sourceName).SetResourceBuilder(resource)
                     .AddOtlpExporter(o => Configure(o, test.Endpoint, "metrics")).Build();
-                using var logs = LoggerFactory.Create(b => b.AddOpenTelemetry(o => o.SetResourceBuilder(resource)
-                    .AddOtlpExporter(e => Configure(e, test.Endpoint, "logs"))));
+                using var logs = LoggerFactory.Create(b => b.AddOpenTelemetry(o =>
+                {
+                    o.Version = "2.0.1";
+                    o.SchemaUrl = "https://opentelemetry.io/schemas/1.44.0";
+                    o.SetResourceBuilder(resource).AddOtlpExporter(e => Configure(e, test.Endpoint, "logs"));
+                }));
                 using var activity = source.CreateActivity("sdk.operation", ActivityKind.Server)!.Start();
                 activity.SetStatus(ActivityStatusCode.Ok).SetTag("http.request.method", "POST");
                 OrderCreated(logs.CreateLogger(sourceName), 41, null);
@@ -59,6 +63,8 @@ public sealed class SdkSignalTests
         Assert.AreEqual("OrderCreated", log.EventName);
         Assert.AreEqual(9, log.SeverityNumber);
         Assert.AreEqual(sourceName, log.Scope?.Name);
+        Assert.AreEqual("2.0.1", log.Scope?.Version);
+        Assert.AreEqual("https://opentelemetry.io/schemas/1.44.0", log.Scope?.SchemaUrl);
         Assert.AreEqual("sdk-service", log.Resource.Attributes["service.name"]);
         Assert.AreEqual("https://opentelemetry.io/schemas/1.44.0", log.Resource.SchemaUrl);
         var metric = result.Metrics.First(m => m.Metric.Name == "orders.created");

@@ -2,7 +2,7 @@
 
 Reviewed every native test method and lifecycle fixture below. Grades are source-review judgments, not a substitute for execution. A means a focused independent oracle and owned state; B marks broad integration or descriptor-contract scope. There are no open Critical/High findings or F rows.
 
-The two intentionally failing child methods are owned by `Native_results_preserve_both_failures_and_each_data_row_identity`; they are never counted as unowned green tests. The raw Cobertura report retains16 unexecuted generated parser factories; native DotCov aggregation reports1019/1019 lines and360/360 branches. Both views are preserved.
+The two intentionally failing child methods are owned by `Native_results_preserve_both_failures_and_each_data_row_identity`; they are never counted as unowned green tests. The raw Cobertura report retains16 unexecuted generated parser factories; the current source-file union is 1110/1110 lines and 452/452 branches for Testing. The public dependency is also instrumented and has additional gaps; the complete unfiltered report is preserved. The owner removed blanket library percentage thresholds in favor of useful behavior and invariant tests.
 
 | File / method | Grade | Oracle and disposition |
 | --- | --- | --- |
@@ -63,6 +63,22 @@ The two intentionally failing child methods are owned by `Native_results_preserv
 | `WireMetadataTests.cs` / `Complete_span_resource_scope_events_and_links_survive_in_wire_order` | A | Independent wire literals pin full span/resource/scope fields, dropped counts, flags, timestamps, event/link order, exception message and stack trace. |
 | `WireMetadataTests.cs` / `Recursive_otlp_values_keep_their_types_without_stringification` | A | Nested typed values are compared with explicit scalar, byte, array and dictionary expectations rather than a mapper-generated expected value. |
 | `WireSchemaTests.cs` / `Resource_schema_survives_the_official_sdk_and_protobuf_wire` | A | Literal null/1.44.0 schema values reach the decoded resource independently of a conflicting telemetry.schema_url attribute; exact SDK scope, span identity, kind, status and HTTP method. |
+
+| `RegistryConformanceTests.cs` / `Empty_capture_is_not_evidence_and_null_capture_is_rejected` | A | Exact null-argument exception and an empty capture cannot count as conformance evidence. |
+
+| `RegistryConformanceTests.cs` / `Custom_names_and_open_enum_values_are_valid_and_remain_visible` | A | Known open enum values and custom attribute/metric names remain valid, with exact separate name lists and checked counts. |
+
+| `RegistryConformanceTests.cs` / `Audit_reaches_span_log_resource_scope_event_and_link_attributes` | B | One independently wrong integer attribute in eight concrete locations produces the exact ordered paths; log-body maps and unknown times remain intact. |
+
+| `RegistryConformanceTests.cs` / `Audit_reaches_every_point_shape_and_filtered_exemplar_attributes` | B | All five actual point variants expose nine exact diagnostic locations, including the four supported exemplar collections; no shape can silently skip its attributes. |
+
+| `RegistryConformanceTests.cs` / `Registered_units_and_deprecations_are_reported_without_inferring_an_sdk_instrument` | B | Literal registered seconds vs milliseconds and known renamed keys/metric produce exact ordered diagnostics; aggregation shape is not mistaken for SDK instrument kind. |
+
+| `RegistryConformanceTests.cs` / `Deprecation_is_visible_advice_without_a_false_protocol_failure` | A | An actual renamed registry key produces one exact improvement diagnostic while type-conformant telemetry remains accepted. |
+
+| `RegistryConformanceTests.cs` / `Template_attributes_use_their_declared_array_kind_without_rejecting_custom_neighbors` | A | Real header and integer-array template keys match their registry kinds; a near-neighbor custom key stays custom rather than failing a prefix heuristic. |
+
+| `RegistryConformanceTests.cs` / `Registry_value_kinds_preserve_otlp_types` | B | Explicit positive and negative wire-type cases cover scalars, arrays, mixed arrays, empty arrays, any and unsupported metadata; integer/double coercion cannot silently pass. |
 
 All HTTP receivers bind port0 directly and are disposed. Parallel tests use invocation-local sources/meters/providers and owned request objects. Native child processes are killed and waited on in `finally`; temporary report directories are removed. No test resets another test's activity or alters compiler-generated static state.
 
