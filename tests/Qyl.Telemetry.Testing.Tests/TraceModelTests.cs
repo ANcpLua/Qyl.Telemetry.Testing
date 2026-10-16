@@ -66,6 +66,47 @@ public sealed class TraceModelTests
     }
 
     [TestMethod]
+    public async Task Repeated_exports_preserve_raw_observations_without_inventing_service_calls()
+    {
+        await using var receiver = await OtlpReceiver.StartAsync(TestContext.CancellationToken);
+        var request = RichSpan();
+        var orders = request.ResourceSpans[0];
+        orders.Resource.Attributes[0].Value.StringValue = "orders";
+        var client = orders.ScopeSpans[0].Spans[0];
+        client.Kind = ProtoSpan.Types.SpanKind.Client;
+        var payments = orders.Clone();
+        payments.Resource.Attributes[0].Value.StringValue = "payments";
+        var server = payments.ScopeSpans[0].Spans[0];
+        server.Kind = ProtoSpan.Types.SpanKind.Server;
+        server.SpanId = Id("3333333333333333");
+        server.ParentSpanId = client.SpanId;
+        var nextClient = client.Clone();
+        nextClient.SpanId = Id("5555555555555555");
+        orders.ScopeSpans[0].Spans.Add(nextClient);
+        var nextServer = server.Clone();
+        nextServer.SpanId = Id("6666666666666666");
+        nextServer.ParentSpanId = nextClient.SpanId;
+        payments.ScopeSpans[0].Spans.Add(nextServer);
+        request.ResourceSpans.Add(payments);
+        var bytes = request.ToByteArray();
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            using var response = await ReceiverTests.PostAsync(receiver.Endpoint, bytes, TestContext.CancellationToken);
+            response.EnsureSuccessStatusCode();
+        }
+        var capture = receiver.Snapshot();
+        var trace = new QylTrace("11111111111111111111111111111111", capture);
+        Assert.HasCount(8, capture.Spans);
+        Assert.HasCount(8, trace.Spans);
+        Assert.HasCount(2, capture.Requests);
+        Assert.IsTrue(capture.Requests.All(export => export.Payload.Span.SequenceEqual(bytes)));
+        Assert.HasCount(2, trace.Calls);
+        Assert.AreSequenceEqual(["3333333333333333", "6666666666666666"],
+            trace.Calls.Select(call => call.Server.SpanId).Order(StringComparer.Ordinal));
+        Assert.IsTrue(trace.Calls.All(call => call is { From: "orders", To: "payments" }));
+    }
+
+    [TestMethod]
     public void Empty_selection_is_a_conformance_failure_and_never_a_green_empty_loop()
     {
         var trace = new QylTrace("trace", new TelemetrySnapshot([], [], [], []));

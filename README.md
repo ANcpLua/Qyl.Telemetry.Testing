@@ -41,6 +41,8 @@ select the action's trace. `Services`, `Calls` and `StoresOf(service)` derive se
 those spans. `SessionIds` contains observed `session.id` values; `SessionId` is populated only when exactly one was
 observed. A trace ID is not a session ID.
 
+Repeated exports remain visible in `Spans` and `Capture`. The derived call graph uses unique span IDs; separate client/server pairs between the same services remain separate calls.
+
 ## Native MSTest integration
 
 Standalone `TraceAsync` needs no custom test class. To share a root across an entire MSTest invocation, replace

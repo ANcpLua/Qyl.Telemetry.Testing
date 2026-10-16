@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+- Derive service calls from unique span identities so retransmitting an export cannot invent calls. Keep every raw span observation and original export, and retain distinct calls between the same services.
+
 ## 1.1.0
 
 - Consume SemanticConventions 12.0.0, including the verified Oracle duration wire-type correction.

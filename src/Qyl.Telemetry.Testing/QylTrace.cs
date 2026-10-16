@@ -54,7 +54,8 @@ public sealed class QylTrace
             .OfType<string>().Distinct(StringComparer.Ordinal).AsReadOnlySnapshot();
         var byId = Spans.GroupBy(s => s.SpanId, StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
-        Calls = Spans.Where(s =>
+        // One server span is one call; repeated exports remain in Spans and Capture.
+        Calls = byId.Values.Where(s =>
                 s is { Kind: SpanKind.Server, ParentSpanId: { } parent } && byId.TryGetValue(parent, out var client)
                                                                          && client.Kind == SpanKind.Client &&
                                                                          client.Service != s.Service)
