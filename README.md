@@ -2,11 +2,13 @@
 
 Capture OTLP telemetry inside a .NET test and inspect what was exported. The receiver accepts traces, logs and metrics
 over OTLP/HTTP protobuf, including gzip. It keeps typed values, resource and scope metadata, ordered span events and
-links, named log events and all five metric shapes.
+links, named log events and all five metric shapes. Fully read protobuf exports are retained before decoding in
+`Snapshot().Requests`, including unknown fields and rejected records. JSON captures include every metric's data shape
+and points; the original payload provides the authoritative protobuf representation.
 
 The package targets .NET 10 and uses the shared `Microsoft.AspNetCore.App` framework. Its native test integration uses
-MSTest 4.5.1 and Microsoft.Testing.Platform 2.5.1. Version 1.0.0 is published on NuGet; its native release verifier
-restored it from the public feed and passed the live receiver consumer smoke.
+MSTest 4.5.1 and Microsoft.Testing.Platform 2.5.1. The 1.1.0 candidate adds diagnostic capture fidelity and OTLP
+error handling. Version 1.0.0 remains the verified published baseline until the new native release completes.
 
 ## Capture a trace
 
@@ -83,6 +85,12 @@ separate registry audit does not infer definition-specific required attributes.
 
 `OtlpReceiver.StartAsync()` exposes a loopback endpoint bound directly to an available port. `Snapshot()` returns
 received records; `AwaitAsync(condition, timeout, cancellationToken)` waits for a condition without polling sleeps.
+
+HTTP failures return a decodable Google protobuf `Status` and a developer-facing message, with the response encoding
+matched to the request. HTTP status remains authoritative. The receiver accepts protobuf exports; unsupported JSON
+exports receive a JSON-encoded error. Profiling-only string/key table references are ignored non-fatally: values become
+empty, unresolved keys are absent, and each warning remains in the export receipt and OTLP response. A warning does not
+increment the rejected-record count. Full receipt diagnostics remain available when optional response text is bounded.
 Dispose the receiver to stop the server and wake pending waits.
 
 The wire model comes from OpenTelemetry protobuf v1.11.1. Generated DTOs are internal. Canonical span, resource and

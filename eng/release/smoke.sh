@@ -18,6 +18,8 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text.Json;
+using RpcStatus = Google.Rpc.Status;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
@@ -72,6 +74,16 @@ foreach (var metric in exportedMetrics)
 Require(metric.Correlation == MetricCorrelation.ResourcePartition && metric.Metric.Scope?.Name == scope
     && metric.Metric.Unit == "{order}" && metric.Metric.Data is SumData { IsMonotonic: true } sum
     && sum.Points.Single().Value is long and 7, "Wrong exported counter, unit, scope or point value.");
+using (var archive = JsonSerializer.SerializeToDocument(trace.Capture))
+{
+    var counter = archive.RootElement.GetProperty("Metrics").EnumerateArray()
+        .First(m => m.GetProperty("Name").GetString() == "release.proof.counter").GetProperty("Data");
+    Require(counter.GetProperty("kind").GetString() == "sum" &&
+        counter.GetProperty("Points")[0].GetProperty("Value").GetInt64() == 7,
+        "The diagnostic archive lost the metric shape or exact point value.");
+}
+Require(trace.Capture.Requests.Count >= 3 && trace.Capture.Requests.All(r => !r.Payload.IsEmpty),
+    "Original protobuf export payloads were not retained.");
 var audit = RegistryConformance.Check(trace.Capture);
 Require(audit.IsConformant && audit.CustomMetrics.Contains("release.proof.counter"), "Registry audit rejected valid custom telemetry.");
 
@@ -83,7 +95,13 @@ using var rejected = await http.PostAsync(new Uri(receiver.Endpoint, "v1/traces"
 Require(rejected.StatusCode == HttpStatusCode.BadRequest, "Malformed protobuf was accepted.");
 var receipt = receiver.Snapshot().Receipts.Single();
 Require(receipt is { Signal: "traces", Accepted: 0, Error: not null }, "Missing malformed-request evidence.");
-Console.WriteLine("Package consumer verified a correlated span, named log, partitioned counter, registry audit and malformed-request evidence.");
+Require(rejected.Content.Headers.ContentType?.MediaType == "application/x-protobuf", "Wrong error response encoding.");
+var error = RpcStatus.Parser.ParseFrom(await rejected.Content.ReadAsByteArrayAsync());
+Require(error.Code == (int)Google.Rpc.Code.InvalidArgument && error.Message == receipt.Error,
+    "Malformed protobuf did not return a useful protobuf Status.");
+Require(receiver.Snapshot().Requests.Single().Payload.Span.SequenceEqual(new byte[] { 0x80 }),
+    "Malformed original payload was not retained.");
+Console.WriteLine("Package consumer verified correlated signals, complete metric JSON, original payloads and a decoded protobuf error Status.");
 
 static void Require(bool condition, string message)
 {

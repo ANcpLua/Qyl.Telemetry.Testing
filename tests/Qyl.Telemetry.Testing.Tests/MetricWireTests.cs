@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Google.Protobuf;
 using JetBrains.Annotations;
 using OpenTelemetry.Proto.Collector.Metrics.V1;
@@ -58,6 +59,14 @@ public sealed class MetricWireTests
         Assert.AreEqual("scope-schema", observed.Scope?.SchemaUrl);
         Assert.AreEqual("original", observed.Metadata["metadata"]);
         CheckShape(shape, observed.Data);
+        // The diagnostic archive must contain the distribution, not an empty abstract base object.
+        using var archive = JsonSerializer.SerializeToDocument(receiver.Snapshot());
+        var archived = archive.RootElement.GetProperty("Metrics")[0].GetProperty("Data");
+        Assert.AreEqual(shape, archived.GetProperty("kind").GetString());
+        Assert.AreEqual(1, archived.GetProperty("Points").GetArrayLength());
+        var payload = archive.RootElement.GetProperty("Requests")[0];
+        Assert.AreEqual("metrics", payload.GetProperty("Signal").GetString());
+        Assert.AreSequenceEqual(request.ToByteArray(), payload.GetProperty("Payload").GetBytesFromBase64());
         var partitioned = new QylTrace("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", receiver.Snapshot(),
             new MetricPartition("service.name", "metric-service"));
         var attributed = Assert.ContainsSingle(partitioned.Metrics);

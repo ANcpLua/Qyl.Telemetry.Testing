@@ -18,15 +18,24 @@ public sealed class ReceiverTests
     [UsedImplicitly] public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
-    public async Task Malformed_protobuf_returns_bad_request_and_records_the_error()
+    [DataRow("traces")]
+    [DataRow("logs")]
+    [DataRow("metrics")]
+    public async Task Malformed_protobuf_returns_bad_request_and_records_the_error(string signal)
     {
         await using var receiver = await OtlpReceiver.StartAsync(TestContext.CancellationToken);
-        using var response = await PostAsync(receiver.Endpoint, [0x80], TestContext.CancellationToken);
+        using var response = await PostAsync(receiver.Endpoint, [0x80], TestContext.CancellationToken, signal);
         Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         var receipt = Assert.ContainsSingle(receiver.Snapshot().Receipts);
-        Assert.AreEqual("traces", receipt.Signal);
+        Assert.AreEqual(signal, receipt.Signal);
         Assert.AreEqual(0L, receipt.Accepted);
         Assert.IsFalse(string.IsNullOrEmpty(receipt.Error));
+        var original = Assert.ContainsSingle(receiver.Snapshot().Requests);
+        Assert.AreEqual(signal, original.Signal);
+        Assert.AreSequenceEqual(new byte[] { 0x80 }, original.Payload.ToArray());
+        var error = await TransportTests.ReadErrorAsync(response, TestContext.CancellationToken);
+        Assert.AreEqual((int)Google.Rpc.Code.InvalidArgument, error.Code);
+        Assert.AreEqual(receipt.Error, error.Message);
     }
 
     [TestMethod]
@@ -139,6 +148,30 @@ public sealed class ReceiverTests
         Assert.AreEqual(SpanKind.Consumer, span.Kind);
         Assert.AreEqual(ActivityStatusCode.Error, span.Status);
         Assert.AreEqual("rich-scope", span.Scope?.Name);
+        Assert.AreSequenceEqual(WireMetadataTests.RichSpan().ToByteArray(),
+            Assert.ContainsSingle(receiver.Snapshot().Requests).Payload.ToArray());
+    }
+
+    [TestMethod]
+    public async Task Original_export_retains_unknown_fields_and_snapshot_membership()
+    {
+        await using var receiver = await OtlpReceiver.StartAsync(TestContext.CancellationToken);
+        var empty = receiver.Snapshot();
+        // Field 127, varint 1: valid unknown OTLP protobuf, absent from every decoded public record.
+        byte[] payload = [0xf8, 0x07, 0x01];
+        using var response = await PostAsync(receiver.Endpoint, payload, TestContext.CancellationToken);
+        response.EnsureSuccessStatusCode();
+        var snapshot = receiver.Snapshot();
+        Assert.IsEmpty(empty.Requests);
+        Assert.IsEmpty(snapshot.Spans);
+        Assert.AreEqual(0L, Assert.ContainsSingle(snapshot.Receipts).Accepted);
+        var request = Assert.ContainsSingle(snapshot.Requests);
+        Assert.AreEqual("traces", request.Signal);
+        Assert.AreSequenceEqual(payload, request.Payload.ToArray());
+        using var second = await PostAsync(receiver.Endpoint, [], TestContext.CancellationToken);
+        second.EnsureSuccessStatusCode();
+        Assert.HasCount(1, snapshot.Requests);
+        Assert.HasCount(2, receiver.Snapshot().Requests);
     }
 
     internal static async Task<HttpResponseMessage> PostAsync(Uri endpoint, byte[] bytes,

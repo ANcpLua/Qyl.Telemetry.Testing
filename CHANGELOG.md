@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0
+
+- Return typed protobuf Status errors and useful diagnostic messages for malformed, oversized and unsupported OTLP/HTTP requests, preserving the request's supported response encoding.
+- Handle profiling-only string-table references as non-fatal empty values with retained warnings, rather than dereferencing a missing map. Keep literal keys when present and ignore unresolved indexed keys.
+- Preserve each uncompressed protobuf export before decoding, including unknown fields and records rejected by the decoder. Snapshot membership remains stable.
+- Serialize all metric data shapes with their complete points and a kind discriminator, retaining exact 64-bit numbers in diagnostic JSON.
+
 ## 1.0.0
 
 - Capture OTLP/HTTP protobuf traces, logs and all five metric shapes in an owned in-process receiver.

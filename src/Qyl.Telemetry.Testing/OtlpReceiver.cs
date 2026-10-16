@@ -15,6 +15,8 @@ using OpenTelemetry.Proto.Collector.Metrics.V1;
 using OpenTelemetry.Proto.Collector.Trace.V1;
 using OpenTelemetry.Proto.Metrics.V1;
 using Qyl.Telemetry.SemanticConventions;
+using Google.Rpc;
+using RpcStatus = Google.Rpc.Status;
 
 namespace Qyl.Telemetry.Testing;
 
@@ -25,6 +27,7 @@ public sealed class OtlpReceiver : IAsyncDisposable
     private readonly List<LogRecord> _logs = [];
     private readonly List<MetricRecord> _metrics = [];
     private readonly List<ExportReceipt> _receipts = [];
+    private readonly List<OtlpExportRequest> _requests = [];
     private readonly List<SpanRecord> _spans = [];
     private WebApplication _application = null!;
     private TaskCompletionSource _changed = NewSignal();
@@ -85,7 +88,10 @@ public sealed class OtlpReceiver : IAsyncDisposable
         lock (_gate)
         {
             return new TelemetrySnapshot(_spans.AsReadOnlySnapshot(), _logs.AsReadOnlySnapshot(),
-                _metrics.AsReadOnlySnapshot(), _receipts.AsReadOnlySnapshot());
+                _metrics.AsReadOnlySnapshot(), _receipts.AsReadOnlySnapshot())
+            {
+                Requests = _requests.AsReadOnlySnapshot()
+            };
         }
     }
 
@@ -124,24 +130,34 @@ public sealed class OtlpReceiver : IAsyncDisposable
     {
         if (signal is not ("traces" or "logs" or "metrics"))
         {
-            context.Response.StatusCode = 404;
+            await FailAsync(context, signal, 404, Code.NotFound, "Unknown OTLP signal; expected traces, logs or metrics.");
             return;
         }
 
         if (!string.Equals(context.Request.ContentType?.Split(';')[0], "application/x-protobuf",
                 StringComparison.OrdinalIgnoreCase))
         {
-            context.Response.StatusCode = 415;
+            await FailAsync(context, signal, 415, Code.Unimplemented, "This receiver accepts application/x-protobuf requests.");
             return;
         }
 
         var encoding = context.Request.Headers.ContentEncoding.ToString();
         if (encoding is not ("" or "gzip"))
         {
-            context.Response.StatusCode = 415;
+            await FailAsync(context, signal, 415, Code.Unimplemented, "Unsupported content encoding; expected gzip or no encoding.");
             return;
         }
 
+        // Reject a declared oversize payload before Kestrel's first body read marks the connection
+        // as a bad request. This lets the client receive the OTLP Status before uploading the body.
+        if (context.Request.ContentLength > 16 * 1024 * 1024)
+        {
+            await FailAsync(context, signal, 413, Code.ResourceExhausted,
+                "The OTLP payload exceeds the 16 MiB receiver limit.");
+            return;
+        }
+
+        var decoder = new OtlpDecode();
         try
         {
             await using var input = encoding == "gzip"
@@ -155,7 +171,7 @@ public sealed class OtlpReceiver : IAsyncDisposable
             {
                 if (buffer.Length + read > 16 * 1024 * 1024)
                 {
-                    context.Response.StatusCode = 413;
+                    await FailAsync(context, signal, 413, Code.ResourceExhausted, "The decompressed OTLP payload exceeds the 16 MiB receiver limit.");
                     return;
                 }
 
@@ -163,6 +179,10 @@ public sealed class OtlpReceiver : IAsyncDisposable
             }
 
             var bytes = buffer.ToArray();
+            lock (_gate)
+            {
+                _requests.Add(new OtlpExportRequest(signal, bytes));
+            }
             long accepted = 0, rejected = 0;
             var errors = new List<string>();
 
@@ -195,14 +215,14 @@ public sealed class OtlpReceiver : IAsyncDisposable
                     foreach (var scope in resource.ScopeSpans)
                     foreach (var span in scope.Spans)
                         Add(span,
-                            s => OtlpDecode.Span(s, OtlpDecode.Resource(resource.Resource, resource.SchemaUrl),
-                                OtlpDecode.Scope(scope.Scope, scope.SchemaUrl)), _spans);
+                            s => decoder.Span(s, decoder.Resource(resource.Resource, resource.SchemaUrl),
+                                decoder.Scope(scope.Scope, scope.SchemaUrl)), _spans);
                     response = new ExportTraceServiceResponse
                     {
-                        PartialSuccess = rejected == 0
+                        PartialSuccess = rejected == 0 && decoder.Warnings.Count == 0
                             ? null
                             : new ExportTracePartialSuccess
-                                { RejectedSpans = rejected, ErrorMessage = string.Join(" ", errors.Distinct()) }
+                                { RejectedSpans = rejected, ErrorMessage = ResponseMessage(errors.Concat(decoder.Warnings)) }
                     };
                     break;
                 }
@@ -212,14 +232,14 @@ public sealed class OtlpReceiver : IAsyncDisposable
                     foreach (var scope in resource.ScopeLogs)
                     foreach (var log in scope.LogRecords)
                         Add(log,
-                            l => OtlpDecode.Log(l, OtlpDecode.Resource(resource.Resource, resource.SchemaUrl),
-                                OtlpDecode.Scope(scope.Scope, scope.SchemaUrl)), _logs);
+                            l => decoder.Log(l, decoder.Resource(resource.Resource, resource.SchemaUrl),
+                                decoder.Scope(scope.Scope, scope.SchemaUrl)), _logs);
                     response = new ExportLogsServiceResponse
                     {
-                        PartialSuccess = rejected == 0
+                        PartialSuccess = rejected == 0 && decoder.Warnings.Count == 0
                             ? null
                             : new ExportLogsPartialSuccess
-                                { RejectedLogRecords = rejected, ErrorMessage = string.Join(" ", errors.Distinct()) }
+                                { RejectedLogRecords = rejected, ErrorMessage = ResponseMessage(errors.Concat(decoder.Warnings)) }
                     };
                     break;
                 }
@@ -229,30 +249,66 @@ public sealed class OtlpReceiver : IAsyncDisposable
                     foreach (var scope in resource.ScopeMetrics)
                     foreach (var metric in scope.Metrics)
                         Add(metric,
-                            m => OtlpDecode.Metric(m, OtlpDecode.Resource(resource.Resource, resource.SchemaUrl),
-                                OtlpDecode.Scope(scope.Scope, scope.SchemaUrl)), _metrics, PointCount(metric));
+                            m => decoder.Metric(m, decoder.Resource(resource.Resource, resource.SchemaUrl),
+                                decoder.Scope(scope.Scope, scope.SchemaUrl)), _metrics, PointCount(metric));
                     response = new ExportMetricsServiceResponse
                     {
-                        PartialSuccess = rejected == 0
+                        PartialSuccess = rejected == 0 && decoder.Warnings.Count == 0
                             ? null
                             : new ExportMetricsPartialSuccess
-                                { RejectedDataPoints = rejected, ErrorMessage = string.Join(" ", errors.Distinct()) }
+                                { RejectedDataPoints = rejected, ErrorMessage = ResponseMessage(errors.Concat(decoder.Warnings)) }
                     };
                     break;
                 }
             }
 
+            foreach (var warning in decoder.Warnings)
+                _application.Logger.LogWarning("OTLP decoding warning: {Warning}", warning);
             Publish(new ExportReceipt(signal, accepted, rejected,
-                errors.Count == 0 ? null : string.Join(" ", errors.Distinct())));
+                errors.Count == 0 ? null : string.Join(" ", errors.Distinct()))
+            {
+                Warnings = decoder.Warnings.AsReadOnlySnapshot()
+            });
             context.Response.ContentType = "application/x-protobuf";
             await context.Response.Body.WriteAsync(response.ToByteArray(), context.RequestAborted)
                 .ConfigureAwait(false);
         }
+        catch (BadHttpRequestException error) when (error.StatusCode == StatusCodes.Status413PayloadTooLarge)
+        {
+            await FailAsync(context, signal, error.StatusCode, Code.ResourceExhausted, error.Message);
+        }
         catch (Exception error) when (error is InvalidProtocolBufferException or InvalidDataException)
         {
-            Publish(new ExportReceipt(signal, 0, 0, error.Message));
-            context.Response.StatusCode = 400;
+            await FailAsync(context, signal, 400, Code.InvalidArgument, error.Message);
         }
+    }
+
+    private async Task FailAsync(HttpContext context, string signal, int httpStatus, Code code, string message)
+    {
+        Publish(new ExportReceipt(signal, 0, 0, message));
+        context.Response.StatusCode = httpStatus;
+        var status = new RpcStatus { Code = (int)code, Message = message };
+        // OTLP/HTTP requires a protobuf Status for HTTP errors and matching response encoding:
+        // https://opentelemetry.io/docs/specs/otlp/#otlphttp-response
+        // https://opentelemetry.io/docs/specs/otlp/#failures-1
+        if (string.Equals(context.Request.ContentType?.Split(';')[0], "application/json", StringComparison.OrdinalIgnoreCase))
+        {
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(JsonFormatter.Default.Format(status), context.RequestAborted).ConfigureAwait(false);
+        }
+        else
+        {
+            context.Response.ContentType = "application/x-protobuf";
+            await context.Response.Body.WriteAsync(status.ToByteArray(), context.RequestAborted).ConfigureAwait(false);
+        }
+    }
+
+    private static string ResponseMessage(IEnumerable<string> messages)
+    {
+        // Optional wire diagnostics are bounded; full diagnostics and original payloads remain in Snapshot().
+        // https://opentelemetry.io/docs/specs/otlp/#otlphttp-response
+        var message = string.Join(" ", messages.Distinct());
+        return message.Length > 4096 ? message[..4096] : message;
     }
 
     private static int PointCount(Metric metric)

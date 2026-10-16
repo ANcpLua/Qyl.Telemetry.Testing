@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using Qyl.Telemetry.SemanticConventions;
 
@@ -30,6 +31,13 @@ public sealed record MetricRecord(
     MetricData Data);
 
 [PublicAPI]
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
+[JsonDerivedType(typeof(GaugeData), "gauge")]
+[JsonDerivedType(typeof(SumData), "sum")]
+[JsonDerivedType(typeof(HistogramData), "histogram")]
+[JsonDerivedType(typeof(ExponentialHistogramData), "exponential")]
+[JsonDerivedType(typeof(SummaryData), "summary")]
+[JsonDerivedType(typeof(UnspecifiedMetricData), "unspecified")]
 public abstract record MetricData;
 
 [PublicAPI]
@@ -118,11 +126,22 @@ public sealed record ExemplarRecord(
     string? SpanId);
 
 [PublicAPI]
-public sealed record ExportReceipt(string Signal, long Accepted, long Rejected, string? Error);
+public sealed record ExportReceipt(string Signal, long Accepted, long Rejected, string? Error)
+{
+    public IReadOnlyList<string> Warnings { get; init; } = [];
+}
+
+/// <summary>The uncompressed protobuf export payload, retained before record decoding.</summary>
+/// <remarks>Unknown protobuf fields and records rejected by the decoder remain in this payload.</remarks>
+[PublicAPI]
+public sealed record OtlpExportRequest(string Signal, ReadOnlyMemory<byte> Payload);
 
 [PublicAPI]
 public sealed record TelemetrySnapshot(
     IReadOnlyList<SpanRecord> Spans,
     IReadOnlyList<LogRecord> Logs,
     IReadOnlyList<MetricRecord> Metrics,
-    IReadOnlyList<ExportReceipt> Receipts);
+    IReadOnlyList<ExportReceipt> Receipts)
+{
+    public IReadOnlyList<OtlpExportRequest> Requests { get; init; } = [];
+}

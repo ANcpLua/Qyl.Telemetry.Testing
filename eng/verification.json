@@ -1,17 +1,17 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "sdk": "10.0.401",
   "mstest": "4.5.1",
   "mtp": "2.5.1",
-  "status": "published, publicly indexed and VERIFIED; native Pack passed all 160 tests with zero inspection findings; unfiltered coverage is informational by owner decision",
+  "status": "local candidate verified by native Pack and packed consumer;1.0.0 remains the published VERIFIED baseline until native1.1.0 release completes",
   "native_tests": {
-    "passed": 160,
+    "passed": 168,
     "failed": 0,
     "skipped": 0,
-    "log": "artifacts/otel120-public-pack-final.log",
+    "log": "artifacts/otlp-diagnostics-pack.log",
     "earlier_clean_source_archive_log": "artifacts/source-audit.log",
     "earlier_archive_scope": "127 tests before registry audit; not verification of the current source",
-    "source_scope": "current source includes registry audit, native build solution injection and SDK1.20 log scope version/schema assertions"
+    "source_scope": "Includes typed OTLP errors, non-fatal profiling references, original export payloads and complete polymorphic metric diagnostic JSON."
   },
   "unrestricted_native_dotcov_gate": {
     "status": "historical failed 100% gate, retained before the explicit owner policy change",
@@ -155,9 +155,9 @@
   },
   "packed_consumer": {
     "status": "passed",
-    "log": "artifacts/otel120-package-smoke.log",
+    "log": "artifacts/otlp-diagnostics-smoke.log",
     "sdk_exporter": "1.20.0",
-    "scope": "Real correlated span, named log with explicit scope version/schema, partitioned counter, registry audit and retained malformed-request error; local Testing package and public dependencies."
+    "scope": "Real SDK correlated signals plus full metric JSON, original payloads and a decoded Google Status error from the packed candidate."
   },
   "baseline": {
     "path": "artifacts/delegate-cache-baseline",
@@ -196,24 +196,33 @@
   },
   "current_coverage": {
     "lines": [
-      4603,
-      7479
+      4650,
+      7529
     ],
     "branches": [
-      493,
-      1608
+      495,
+      1612
     ],
     "gated_by_percentage": false,
     "raw_report": "artifacts/coverage/coverage.cobertura.xml",
     "dotcov_json": "artifacts/coverage/coverage.json",
-    "native_log": "artifacts/otel120-public-pack-final.log"
+    "native_log": "artifacts/otlp-diagnostics-pack.log",
+    "summary": {
+      "lineRate": 61.76,
+      "branchRate": 30.71,
+      "hasBranchData": true,
+      "totalLines": 7529,
+      "coveredLines": 4650,
+      "totalBranches": 1612,
+      "coveredBranches": 495
+    }
   },
   "inspection": {
     "findings": 0,
     "severity": "INFO",
     "report": "artifacts/inspection.sarif",
-    "sha256": "050ea46f3bc75b60c6dce6d0436d0507473f093449cfc2a2f85045cca4a3a214",
-    "log": "artifacts/otel120-public-pack-final.log"
+    "sha256": "0db8f310863ff2efbaedabb3edb5f18e1beb5af7c676af2dc5c33adec32af989",
+    "log": "artifacts/otlp-diagnostics-pack.log"
   },
   "release": {
     "source_commit": "bba0390",
@@ -221,6 +230,8 @@
     "url": "https://github.com/ANcpLua/Qyl.Telemetry.Testing/releases/tag/v1.0.0",
     "public_package": "https://www.nuget.org/packages/Qyl.Telemetry.Testing/1.0.0",
     "native_verification": "artifacts/release-1.0.0-verify.log",
-    "result": "VERIFIED; public-only restore and live receiver smoke passed"
+    "result": "VERIFIED; public-only restore and live receiver smoke passed",
+    "baseline_version": "1.0.0",
+    "candidate_version": "1.1.0"
   }
 }

@@ -12,39 +12,53 @@ using ProtoExemplar = OpenTelemetry.Proto.Metrics.V1.Exemplar;
 
 namespace Qyl.Telemetry.Testing;
 
-internal static class OtlpDecode
+internal sealed class OtlpDecode
 {
-    private static ReadOnlyDictionary<string, object?> Attributes(IEnumerable<KeyValue> values)
+    private readonly List<string> _warnings = [];
+    internal IReadOnlyList<string> Warnings => _warnings;
+
+    private ReadOnlyDictionary<string, object?> Attributes(IEnumerable<KeyValue> values)
     {
         var result = new Dictionary<string, object?>(StringComparer.Ordinal);
         foreach (var pair in values)
+        {
+            // Profiling-only key references have the same non-fatal rule as indexed values:
+            // https://github.com/open-telemetry/opentelemetry-proto/blob/v1.11.1/opentelemetry/proto/common/v1/common.proto
+            if (pair.KeyStrindex != 0)
+            {
+                _warnings.Add($"KeyStrindex {pair.KeyStrindex} is intended for profiling; its key reference was ignored.");
+                if (pair.Key.Length == 0) continue;
+            }
             if (!result.TryAdd(pair.Key, Value(pair.Value)))
                 throw new InvalidDataException($"Duplicate OTLP attribute: {pair.Key}.");
+        }
         return new ReadOnlyDictionary<string, object?>(result);
     }
 
-    private static object? Value(AnyValue? value)
+    private object? Value(AnyValue? value)
     {
         if (value is null) return null;
         return value.ValueCase switch
         {
             AnyValue.ValueOneofCase.None => null,
             AnyValue.ValueOneofCase.StringValue => value.StringValue,
+            AnyValue.ValueOneofCase.StringValueStrindex => UnsupportedStringReference(value.StringValueStrindex),
             AnyValue.ValueOneofCase.BoolValue => value.BoolValue,
             AnyValue.ValueOneofCase.IntValue => value.IntValue,
             AnyValue.ValueOneofCase.DoubleValue => value.DoubleValue,
-            _ => StructuredValue(value)
+            AnyValue.ValueOneofCase.BytesValue => value.BytesValue.ToByteArray(),
+            AnyValue.ValueOneofCase.ArrayValue => value.ArrayValue.Values.Select(Value).AsReadOnlySnapshot(),
+            AnyValue.ValueOneofCase.KvlistValue => Attributes(value.KvlistValue.Values),
+            _ => throw new InvalidDataException($"Unsupported OTLP AnyValue case: {value.ValueCase}.")
         };
     }
 
-    private static object StructuredValue(AnyValue value)
+    private string UnsupportedStringReference(int index)
     {
-        return value.ValueCase switch
-        {
-            AnyValue.ValueOneofCase.BytesValue => value.BytesValue.ToByteArray(),
-            AnyValue.ValueOneofCase.ArrayValue => value.ArrayValue.Values.Select(Value).AsReadOnlySnapshot(),
-            _ => Attributes(value.KvlistValue.Values)
-        };
+        // Non-profiling receivers must treat this as non-fatal and absent/empty, with a warning:
+        // https://github.com/open-telemetry/opentelemetry-proto/blob/v1.11.1/opentelemetry/proto/common/v1/common.proto
+        _warnings.Add($"StringValueStrindex {index} is intended for profiling; its value was treated as empty.");
+        return string.Empty;
     }
 
     private static string? Identity(ByteString bytes, int size, bool required = false)
@@ -56,7 +70,7 @@ internal static class OtlpDecode
         return Convert.ToHexStringLower(bytes.Span);
     }
 
-    internal static ResourceRecord Resource(ProtoResource? resource, string schemaUrl)
+    internal ResourceRecord Resource(ProtoResource? resource, string schemaUrl)
     {
         return new ResourceRecord(
             Attributes(resource?.Attributes ?? []))
@@ -72,7 +86,7 @@ internal static class OtlpDecode
         };
     }
 
-    internal static InstrumentationScopeRecord? Scope(ProtoScope? scope, string schemaUrl)
+    internal InstrumentationScopeRecord? Scope(ProtoScope? scope, string schemaUrl)
     {
         return scope is null && schemaUrl.Length == 0
             ? null
@@ -84,7 +98,7 @@ internal static class OtlpDecode
             };
     }
 
-    internal static SpanRecord Span(ProtoSpan span, ResourceRecord resource, InstrumentationScopeRecord? scope)
+    internal SpanRecord Span(ProtoSpan span, ResourceRecord resource, InstrumentationScopeRecord? scope)
     {
         return new SpanRecord(
             Identity(span.TraceId, 16, true)!, Identity(span.SpanId, 8, true)!, span.Name)
@@ -109,7 +123,7 @@ internal static class OtlpDecode
         };
     }
 
-    internal static LogRecord Log(OpenTelemetry.Proto.Logs.V1.LogRecord log, ResourceRecord resource,
+    internal LogRecord Log(OpenTelemetry.Proto.Logs.V1.LogRecord log, ResourceRecord resource,
         InstrumentationScopeRecord? scope)
     {
         return new LogRecord(
@@ -118,14 +132,14 @@ internal static class OtlpDecode
             Identity(log.TraceId, 16), Identity(log.SpanId, 8), log.EventName);
     }
 
-    internal static MetricRecord Metric(ProtoMetric metric, ResourceRecord resource, InstrumentationScopeRecord? scope)
+    internal MetricRecord Metric(ProtoMetric metric, ResourceRecord resource, InstrumentationScopeRecord? scope)
     {
         return new MetricRecord(resource, scope, metric.Name, metric.Description, metric.Unit,
             Attributes(metric.Metadata),
             DecodeMetricData(metric));
     }
 
-    private static MetricData DecodeMetricData(ProtoMetric metric)
+    private MetricData DecodeMetricData(ProtoMetric metric)
     {
         if (metric.Gauge is { } gauge)
             return new GaugeData(
@@ -165,12 +179,12 @@ internal static class OtlpDecode
         return new UnspecifiedMetricData();
     }
 
-    private static ReadOnlyCollection<NumberPoint> Numbers(IEnumerable<NumberDataPoint> points)
+    private ReadOnlyCollection<NumberPoint> Numbers(IEnumerable<NumberDataPoint> points)
     {
         return points.Select(Number).AsReadOnlySnapshot();
     }
 
-    private static NumberPoint Number(NumberDataPoint point)
+    private NumberPoint Number(NumberDataPoint point)
     {
         return new NumberPoint(
             Attributes(point.Attributes), point.StartTimeUnixNano, point.TimeUnixNano,
@@ -182,7 +196,7 @@ internal static class OtlpDecode
             point.Flags, Exemplars(point.Exemplars));
     }
 
-    private static ReadOnlyCollection<ExemplarRecord> Exemplars(IEnumerable<ProtoExemplar> exemplars)
+    private ReadOnlyCollection<ExemplarRecord> Exemplars(IEnumerable<ProtoExemplar> exemplars)
     {
         return exemplars.Select(e => new ExemplarRecord(
             Attributes(e.FilteredAttributes), e.TimeUnixNano,

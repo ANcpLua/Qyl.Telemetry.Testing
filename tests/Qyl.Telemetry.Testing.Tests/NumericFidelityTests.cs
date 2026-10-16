@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Google.Protobuf;
 using JetBrains.Annotations;
 using OpenTelemetry.Proto.Collector.Metrics.V1;
@@ -34,6 +35,9 @@ public sealed class NumericFidelityTests
         {
             Assert.AreEqual(expected, Assert.IsInstanceOfType<long>(captured.Value));
             Assert.AreEqual(expected, Assert.IsInstanceOfType<long>(Assert.ContainsSingle(captured.Exemplars).Value));
+            using var archive = JsonSerializer.SerializeToDocument(captured);
+            Assert.AreEqual(expected, archive.RootElement.GetProperty("Value").GetInt64());
+            Assert.AreEqual(expected, archive.RootElement.GetProperty("Exemplars")[0].GetProperty("Value").GetInt64());
         }
     }
 
