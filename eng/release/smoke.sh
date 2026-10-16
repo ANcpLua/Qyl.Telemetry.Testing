@@ -115,5 +115,5 @@ static void Configure(OtlpExporterOptions options, Uri endpoint, string signal)
     options.ExportProcessorType = ExportProcessorType.Simple;
 }
 CS
-NUGET_PACKAGES="$scratch/packages" dotnet restore "$scratch/smoke.csproj" --configfile "$scratch/NuGet.Config"
+NUGET_PACKAGES="$scratch/packages" dotnet restore "$scratch/smoke.csproj" --configfile "$scratch/NuGet.Config" --no-http-cache
 NUGET_PACKAGES="$scratch/packages" dotnet run --project "$scratch/smoke.csproj" --configuration Release --no-restore

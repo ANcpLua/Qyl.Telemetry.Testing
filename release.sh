@@ -24,7 +24,14 @@ if [[ $mode == --wait ]]; then
   exit 3
 fi
 if [[ $mode == --verify ]]; then
-  exec python3 eng/release/verify.py "$version"
+  set +e
+  python3 eng/release/verify.py "$version" 2>&1 | tee -a "$log"
+  verification_statuses=("${PIPESTATUS[@]}")
+  set -e
+  if (( verification_statuses[0] != 0 )); then
+    exit "${verification_statuses[0]}"
+  fi
+  exit "${verification_statuses[1]}"
 fi
 [[ $(git branch --show-current) == main ]] || { echo 'Release from main.' >&2; exit 1; }
 [[ -z $(git status --porcelain) ]] || { echo 'Commit all source changes before release.' >&2; exit 1; }
