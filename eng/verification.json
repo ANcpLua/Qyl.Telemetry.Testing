@@ -1,18 +1,18 @@
 {
-  "version": "2.0.0",
+  "version": "3.0.0",
   "sdk": "10.0.401",
   "mstest": "4.5.1",
   "mtp": "2.5.1",
-  "status": "Testing 2.0.0 published, indexed and native VERIFIED: public-only HTTP/gRPC SDK consumers passed.",
+  "status": "Testing 3.0.0 candidate: 209 native tests, zero INFO-or-higher findings and isolated HTTP/gRPC package consumers passed. Not published.",
   "native_tests": {
-    "passed": 194,
+    "passed": 209,
     "failed": 0,
     "skipped": 0,
-    "log": "artifacts/grpc-pack-2.0.0-2.log",
+    "log": "artifacts/receiver-payload-limits-pack-3.log",
     "earlier_clean_source_archive_log": "artifacts/source-audit.log",
     "earlier_archive_scope": "127 tests before registry audit; not verification of the current source",
-    "source_scope": "HTTP and native gRPC capture share decoding and retain original protobuf bytes. Real SDK exports cover both transports. Tests verify partial success, non-fatal warnings, native statuses, exact decompressed size boundaries, real cancelled uploads and disposal of both listeners.",
-    "discovery": "artifacts/grpc-discovery.json"
+    "source_scope": "16 MiB default and one configurable positive limit for both transports; native ASP.NET Core HTTP wire/decompression limits, bounded gRPC decompression, native statuses with actual limits, cancellation and disposal.",
+    "discovery": "artifacts/receiver-payload-limits-discovery.json"
   },
   "unrestricted_native_dotcov_gate": {
     "status": "historical failed 100% gate, retained before the explicit owner policy change",
@@ -150,14 +150,14 @@
     "public_source_commit": "4487e4262f1cb558064d7bd9eb32d52d5404b034",
     "public_nupkg_sha256": "75fbecc71ac267c93e07e05bee571b462e8843cd1a97b56aa22b2b8548e89551",
     "public_availability": "Producer native release VERIFIED at2026-10-16T21:31:43Z",
-    "public_restore_and_gate_log": "artifacts/grpc-pack-2.0.0-2.log",
+    "public_restore_and_gate_log": "artifacts/receiver-payload-limits-pack-3.log",
     "scope": "Native typed application attributes with original names. No string-only qyl.app template or stringifying App views."
   },
   "packed_consumer": {
     "status": "passed",
-    "log": "artifacts/grpc-candidate-consumer.log",
+    "log": "artifacts/receiver-payload-limits-consumer.log",
     "sdk_exporter": "1.20.0",
-    "scope": "Fresh isolated consumer of the candidate package; official SDK1.20.0 exports all signals over both HTTP and gRPC, with native application attributes, metric JSON, raw payloads and decoded HTTP errors."
+    "scope": "Isolated candidate 3.0.0 package consumer exercises the new maxPayloadBytes overload and real OpenTelemetry SDK HTTP/gRPC exports, native application values, original payloads, metric JSON and decoded HTTP error Status."
   },
   "baseline": {
     "path": "artifacts/delegate-cache-baseline",
@@ -185,6 +185,7 @@
     "change": "Only temporary NuGet cache relocated outside repository; no coverage settings or thresholds changed"
   },
   "pending": [
+    "Publish and verify Testing 3.0.0",
     "Integrate AutoInstrumentation and prototype"
   ],
   "otel_sdk": "1.20.0",
@@ -196,25 +197,25 @@
   },
   "current_coverage": {
     "lines": [
-      4717,
-      7577
+      4740,
+      7600
     ],
     "branches": [
-      510,
-      1602
+      516,
+      1610
     ],
     "gated_by_percentage": false,
     "raw_report": "artifacts/coverage/coverage.cobertura.xml",
     "dotcov_json": "artifacts/coverage/coverage.json",
-    "native_log": "artifacts/grpc-pack-2.0.0-2.log",
+    "native_log": "artifacts/receiver-payload-limits-pack-3.log",
     "summary": {
-      "lineRate": 62.25,
-      "branchRate": 31.84,
+      "lineRate": 62.37,
+      "branchRate": 32.05,
       "hasBranchData": true,
-      "totalLines": 7577,
-      "coveredLines": 4717,
-      "totalBranches": 1602,
-      "coveredBranches": 510
+      "totalLines": 7600,
+      "coveredLines": 4740,
+      "totalBranches": 1610,
+      "coveredBranches": 516
     },
     "scope": "Unfiltered report includes matching SemanticConventions13 symbols and generated DTOs; no exclusions added."
   },
@@ -222,18 +223,12 @@
     "findings": 0,
     "severity": "INFO",
     "report": "artifacts/inspection.sarif",
-    "sha256": "0280d17c04179bb2ec21357344866e74cf9eab0ff037dd0b1f35815f3d5964a5",
-    "log": "artifacts/grpc-pack-2.0.0-2.log"
+    "sha256": "10c10aa8c0c01036d5e12edb98920fcda7e67e977255bbfc2a97546171664924",
+    "log": "artifacts/receiver-payload-limits-pack-3.log"
   },
   "release": {
-    "source_commit": "8f4af48d48893dab5a2681d5c120cf2c3cc75bbb",
-    "tag": "v2.0.0",
-    "url": "https://github.com/ANcpLua/Qyl.Telemetry.Testing/releases/tag/v2.0.0",
-    "public_package": "https://www.nuget.org/packages/Qyl.Telemetry.Testing/2.0.0",
-    "native_release_log": "artifacts/grpc-release-2.0.0.log",
-    "native_verification": "artifacts/release-2.0.0-verify.log",
-    "result": "VERIFIED; public-only restore and real HTTP/gRPC receiver consumers passed",
-    "verification_log_sha256": "3e7250f3744de8d1f5c0388eb9e5735e0fae93c2e1c40d59affe3505aa7b98d0"
+    "version": "3.0.0",
+    "result": "Not published; native package gate and isolated candidate consumer passed."
   },
   "previous_dependency_symbol_audit": {
     "package": "Qyl.Telemetry.SemanticConventions",
@@ -256,6 +251,27 @@
     "candidate_version": "1.1.0"
   },
   "previous_verified_release": {
+    "source_commit": "8f4af48d48893dab5a2681d5c120cf2c3cc75bbb",
+    "tag": "v2.0.0",
+    "url": "https://github.com/ANcpLua/Qyl.Telemetry.Testing/releases/tag/v2.0.0",
+    "public_package": "https://www.nuget.org/packages/Qyl.Telemetry.Testing/2.0.0",
+    "native_release_log": "artifacts/grpc-release-2.0.0.log",
+    "native_verification": "artifacts/release-2.0.0-verify.log",
+    "result": "VERIFIED; public-only restore and real HTTP/gRPC receiver consumers passed",
+    "verification_log_sha256": "3e7250f3744de8d1f5c0388eb9e5735e0fae93c2e1c40d59affe3505aa7b98d0"
+  },
+  "grpc": {
+    "runtime": "Grpc.AspNetCore.Server2.84.0",
+    "limit_bytes": 16777216,
+    "limit_plus_one_status": "ResourceExhausted with actual configured limit (default/custom, plain/gzip)",
+    "malformed_protobuf_status": "InvalidArgument",
+    "exact_limit": "Accepted at default 16 MiB and custom 1024 bytes, plain/gzip",
+    "original_payload": "Uncompressed bytes retained before parsing; unknown fields and noncanonical encodings preserved",
+    "red_evidence": "artifacts/grpc-limit-diagnostic.log",
+    "green_evidence": "artifacts/receiver-payload-limits-pack-3.log",
+    "configured_test_limit_bytes": 1024
+  },
+  "earlier_verified_release": {
     "source_commit": "9f102b8c22a8b117b25c6b125a03cd6bbac88731",
     "tag": "v1.1.2",
     "url": "https://github.com/ANcpLua/Qyl.Telemetry.Testing/releases/tag/v1.1.2",
@@ -263,14 +279,26 @@
     "native_verification": "artifacts/release-1.1.2-verify.log",
     "result": "VERIFIED; public-only restore and live receiver smoke passed"
   },
-  "grpc": {
-    "runtime": "Grpc.AspNetCore.Server2.84.0",
-    "limit_bytes": 16777216,
-    "limit_plus_one_status": "ResourceExhausted (plain and gzip)",
-    "malformed_protobuf_status": "InvalidArgument",
-    "exact_limit": "Accepted (plain and gzip)",
-    "original_payload": "Uncompressed bytes retained before parsing; unknown fields and noncanonical encodings preserved",
-    "red_evidence": "artifacts/grpc-limit-diagnostic.log",
-    "green_evidence": "artifacts/grpc-pack-2.0.0-2.log"
+  "payload_limits": {
+    "default_bytes": 16777216,
+    "configuration": "OtlpReceiver.StartAsync(int maxPayloadBytes, CancellationToken); QylTest.TraceAsync also accepts maxPayloadBytes",
+    "http": "ASP.NET Core request decompression and Kestrel wire limit use the configured value; HTTP 413 preserves protobuf Status with ResourceExhausted and actual byte limit. Kestrel includes HTTP chunk framing in its wire budget.",
+    "grpc": "Native encoded frame limit and bounded per-message decompression share the configured limit. HTTP framing is outside that per-message budget. Native error details are preserved and enriched with the configured value.",
+    "focused_tests": {
+      "passed": 45,
+      "failed": 0,
+      "skipped": 0,
+      "log": "artifacts/receiver-payload-limits-green-5.log"
+    },
+    "red_log": "artifacts/receiver-payload-limits-red.log",
+    "red_findings": "An oversized gzip header with tiny decoded output returned 200; plain gRPC overflow omitted the actual configured value.",
+    "superseded_full_gate": {
+      "log": "artifacts/receiver-payload-limits-pack-2.log",
+      "results": "artifacts/receiver-payload-limits/full-gate-2-failed",
+      "passed": 208,
+      "failed": 1,
+      "issue": "The shutdown test reused a prior HTTP/2 connection and got Internal instead of Unavailable. Its strict closed-listener oracle now uses a fresh connection; the full gate passed."
+    },
+    "scope": "Testing receiver only; this change does not alter the production Collector configuration."
   }
 }

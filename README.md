@@ -7,7 +7,7 @@ links, named log events and all five metric shapes. Fully read protobuf exports 
 and points; the original payload provides the authoritative protobuf representation.
 
 The package targets .NET 10 and uses the shared `Microsoft.AspNetCore.App` framework. Its native test integration uses
-MSTest 4.5.1 and Microsoft.Testing.Platform 2.5.1. Version 2.0.0 consumes SemanticConventions 13.0.0. Application attributes keep their
+MSTest 4.5.1 and Microsoft.Testing.Platform 2.5.1. Version 3.0.0 consumes SemanticConventions 13.0.0. Application attributes keep their
 original names and types; read them through `SpanRecord.Attributes` and the typed getters.
 
 ## Capture a trace
@@ -109,10 +109,27 @@ integers, doubles, bytes, arrays and maps. Unsigned timestamps and metric counts
 remain absent.
 
 The HTTP receiver supports protobuf, not OTLP JSON. Unknown HTTP signal routes return 404; unsupported content types or
-encodings return 415. HTTP requests and gRPC messages are limited to 16 MiB, including after gzip decompression.
-Malformed HTTP protobuf returns 400; oversized gRPC messages return `ResourceExhausted`. Duplicate
-attribute keys and malformed IDs reject the affected record and return an OTLP partial-success count; accepted records
-remain captured. This in-process receiver is intended for tests, not production ingestion.
+encodings return 415. Both transports default to **16 MiB**. HTTP uses ASP.NET Core request decompression and Kestrel's
+body-size limit: encoded wire bytes and decompressed bytes are bounded independently, including gzip requests without a
+`Content-Length`. Kestrel counts HTTP chunk framing against its wire budget. HTTP size failures return 413 with a
+protobuf `Status`; malformed gzip or protobuf returns 400. gRPC bounds each encoded and decompressed message, returning
+`ResourceExhausted` for overflow and `InvalidArgument` for malformed protobuf. Size diagnostics report the configured
+byte limit.
+
+Pass `maxPayloadBytes` to choose a different limit for both transports when starting a receiver. The production
+Collector's separate gRPC default is 4 MiB; select that value explicitly when matching its default:
+
+```csharp
+await using var receiver = await OtlpReceiver.StartAsync(
+    maxPayloadBytes: 4 * 1024 * 1024,
+    cancellationToken: TestContext.CancellationToken);
+```
+
+`QylTest.TraceAsync` also accepts `maxPayloadBytes` as its third argument. Limits must be positive and are validated
+before either listener is opened.
+
+The receiver is created through `StartAsync`. Duplicate attribute keys and malformed IDs reject the affected record and
+return an OTLP partial-success count; accepted records remain captured. This in-process receiver is intended for tests, not production ingestion.
 
 ## Develop and release
 

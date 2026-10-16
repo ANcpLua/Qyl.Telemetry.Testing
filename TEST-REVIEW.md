@@ -6,7 +6,7 @@ There are no open Critical/High findings or F rows.
 
 The two intentionally failing child methods are owned by
 `Native_results_preserve_both_failures_and_each_data_row_identity`; they are never counted as unowned green tests. The
-earlier Cobertura report retains16 unexecuted generated parser factories. The current 168-case run retains its
+earlier Cobertura report retains16 unexecuted generated parser factories. The current 209-case run retains its
 full raw coverage, including dependency gaps, under artifacts/coverage; earlier counts describe their earlier source. The public dependency is also instrumented and has additional gaps; the complete
 unfiltered report is preserved. The owner removed blanket library percentage thresholds in favor of useful behavior and
 invariant tests.
@@ -100,6 +100,12 @@ prefix heuristic. |
 | `RegistryConformanceTests.cs` / `Registry_value_kinds_preserve_otlp_types` | B | Explicit positive and negative wire-type cases cover scalars, arrays, mixed arrays, empty arrays, any and unsupported metadata; integer/double coercion cannot silently pass. |
 wire-type cases cover scalars, arrays, mixed arrays, empty arrays, any and unsupported metadata; integer/double coercion
 cannot silently pass. |
+
+| `PayloadLimitTests.cs` / `Nonpositive_limits_are_rejected_before_opening_listeners` | A | Two native rows require exactly ArgumentOutOfRangeException with maxPayloadBytes for zero/negative values through the public startup API. |
+| `PayloadLimitTests.cs` / `Http_enforces_the_default_or_configured_limit_with_and_without_content_length` | A | Six native rows send valid unknown-field protobuf below, at and above default 16 MiB/custom 1024-byte limits. Declared plain/gzip and chunked gzip requests require exact success/413 statuses, original accepted bytes, ResourceExhausted Status with actual limit, matching receipt and no captured oversized payload. |
+| `PayloadLimitTests.cs` / `Chunked_identity_requests_enforce_the_native_wire_budget` | A | A real unknown-length plain request below the wire budget succeeds; a payload exceeding that budget returns decoded OTLP 413/ResourceExhausted with 1024-byte diagnostics. Kestrel counts chunk framing, so the accepted request explicitly leaves framing space. |
+| `PayloadLimitTests.cs` / `Compressed_wire_overflow_without_content_length_returns_an_otlp_error` | A | A valid gzip optional filename exceeds the 1024-byte wire budget while decoded protobuf is only three bytes. Actual chunked HTTP must return OTLP 413/ResourceExhausted and retain a diagnostic without a captured export; this failed with 200 before native body limits. |
+| `PayloadLimitTests.cs` / `Trace_capture_applies_the_configured_limit_to_both_transports` | A | The public QylTest.TraceAsync maxPayloadBytes overload starts an actual 128-byte receiver. A 129-byte gRPC message and HTTP body must fail with ResourceExhausted/413 and name 128 bytes; no original or decoded oversized export is accepted. |
 
 All HTTP receivers bind port0 directly and are disposed. Parallel tests use invocation-local sources/meters/providers
 and owned request objects. Native child processes are killed and waited on in `finally`; temporary report directories

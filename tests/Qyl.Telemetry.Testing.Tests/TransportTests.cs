@@ -56,7 +56,7 @@ public sealed class TransportTests
         Assert.AreEqual(HttpStatusCode.RequestEntityTooLarge, response.StatusCode);
         var error = await ReadErrorAsync(response, TestContext.CancellationToken);
         Assert.AreEqual((int)Google.Rpc.Code.ResourceExhausted, error.Code);
-        Assert.Contains("16 MiB", error.Message);
+        Assert.Contains("16777216-byte", error.Message);
         Assert.AreEqual(error.Message, Assert.ContainsSingle(receiver.Snapshot().Receipts).Error);
         Assert.IsEmpty(receiver.Snapshot().Spans);
     }

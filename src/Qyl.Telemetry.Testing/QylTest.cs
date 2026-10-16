@@ -7,12 +7,16 @@ namespace Qyl.Telemetry.Testing;
 [PublicAPI]
 public static class QylTest
 {
+    public static Task<QylTrace> TraceAsync(Func<QylCapture, Task> action, Func<QylTrace, bool> until,
+        TimeSpan? timeout = null, CancellationToken cancellationToken = default) =>
+        TraceAsync(action, until, OtlpReceiver.DefaultMaxPayloadBytes, timeout, cancellationToken);
+
     public static async Task<QylTrace> TraceAsync(Func<QylCapture, Task> action, Func<QylTrace, bool> until,
-        TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+        int maxPayloadBytes, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(action);
         ArgumentNullException.ThrowIfNull(until);
-        await using var receiver = await OtlpReceiver.StartAsync(cancellationToken).ConfigureAwait(false);
+        await using var receiver = await OtlpReceiver.StartAsync(maxPayloadBytes, cancellationToken).ConfigureAwait(false);
         using var ownedRoot = Activity.Current?.OperationName == QylTestHooks.Operation ? null : QylTestHooks.NewRoot();
         var root = Activity.Current!;
         var capture = new QylCapture(receiver, root.TraceId.ToHexString(), root.Id!);

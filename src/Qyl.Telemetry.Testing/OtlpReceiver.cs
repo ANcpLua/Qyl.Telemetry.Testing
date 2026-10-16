@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.IO.Compression;
 using System.Net;
 using Google.Protobuf;
+using Grpc.AspNetCore.Server;
 using Grpc.AspNetCore.Server.Model;
 using Grpc.Core;
 using Grpc.Net.Compression;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Proto.Collector.Logs.V1;
@@ -18,6 +20,7 @@ using OpenTelemetry.Proto.Collector.Trace.V1;
 using OpenTelemetry.Proto.Metrics.V1;
 using Qyl.Telemetry.SemanticConventions;
 using Google.Rpc;
+using BadHttpRequestException = Microsoft.AspNetCore.Http.BadHttpRequestException;
 using RpcStatus = Google.Rpc.Status;
 
 namespace Qyl.Telemetry.Testing;
@@ -25,7 +28,8 @@ namespace Qyl.Telemetry.Testing;
 [PublicAPI]
 public sealed class OtlpReceiver : IAsyncDisposable
 {
-    private const int MaximumPayloadBytes = 16 * 1024 * 1024;
+    internal const int DefaultMaxPayloadBytes = 16 * 1024 * 1024;
+    private readonly int _maxPayloadBytes;
     private readonly Lock _gate = new();
     private readonly List<LogRecord> _logs = [];
     private readonly List<MetricRecord> _metrics = [];
@@ -35,6 +39,8 @@ public sealed class OtlpReceiver : IAsyncDisposable
     private WebApplication _application = null!;
     private TaskCompletionSource _changed = NewSignal();
     private bool _disposed;
+
+    private OtlpReceiver(int maxPayloadBytes) => _maxPayloadBytes = maxPayloadBytes;
 
     public Uri Endpoint { get; private set; } = null!;
     public Uri GrpcEndpoint { get; private set; } = null!;
@@ -59,9 +65,15 @@ public sealed class OtlpReceiver : IAsyncDisposable
         }
     }
 
-    public static async Task<OtlpReceiver> StartAsync(CancellationToken cancellationToken = default)
+    public static Task<OtlpReceiver> StartAsync(CancellationToken cancellationToken = default) =>
+        StartAsync(DefaultMaxPayloadBytes, cancellationToken);
+
+    /// <summary>Starts both transports with the same positive byte limit. The default overload uses 16 MiB.</summary>
+    public static async Task<OtlpReceiver> StartAsync(int maxPayloadBytes,
+        CancellationToken cancellationToken = default)
     {
-        var receiver = new OtlpReceiver();
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxPayloadBytes);
+        var receiver = new OtlpReceiver(maxPayloadBytes);
         var builder = WebApplication.CreateSlimBuilder();
         builder.Logging.ClearProviders();
         ListenOptions? http = null, grpc = null;
@@ -77,19 +89,43 @@ public sealed class OtlpReceiver : IAsyncDisposable
                 listen.Protocols = HttpProtocols.Http2;
                 grpc = listen;
             });
-            // HTTP bounds its body while reading; gRPC bounds the decompressed message.
-            options.Limits.MaxRequestBodySize = null;
+            options.Limits.MaxRequestBodySize = maxPayloadBytes;
+        });
+        builder.Services.AddRequestDecompression(options =>
+        {
+            var gzip = options.DecompressionProviders["gzip"];
+            options.DecompressionProviders.Clear();
+            options.DecompressionProviders.Add("gzip", gzip);
         });
         builder.Services.AddGrpc(options =>
         {
-            options.MaxReceiveMessageSize = MaximumPayloadBytes;
+            options.MaxReceiveMessageSize = maxPayloadBytes;
             options.CompressionProviders.Clear();
             options.CompressionProviders.Add(new BoundedGrpcCompressionProvider(
-                new GzipCompressionProvider(CompressionLevel.Fastest), MaximumPayloadBytes));
+                new GzipCompressionProvider(CompressionLevel.Fastest), maxPayloadBytes));
         });
         builder.Services.AddSingleton(new OtlpGrpcService(receiver));
         builder.Services.AddSingleton<IServiceMethodProvider<OtlpGrpcService>, OtlpGrpcMethodProvider>();
         receiver._application = builder.Build();
+        receiver._application.UseRouting();
+        receiver._application.Use(async (context, next) =>
+        {
+            // gRPC limits each message, not the HTTP body (which also contains frame headers).
+            if (context.GetEndpoint()?.Metadata.GetMetadata<GrpcMethodMetadata>() is not null)
+                context.Features.GetRequiredFeature<IHttpMaxRequestBodySizeFeature>().MaxRequestBodySize = null;
+            await next(context).ConfigureAwait(false);
+            // Size failures have no response message, so gRPC sends a trailers-only response.
+            // Preserve the native status and detail while reporting the configured byte limit.
+            if (!context.Response.HasStarted && context.Response.Headers.GrpcStatus == "8")
+            {
+                var detail = Uri.UnescapeDataString(context.Response.Headers.GrpcMessage.ToString());
+                context.Response.Headers.GrpcMessage = Uri.EscapeDataString(
+                    $"Configured {maxPayloadBytes}-byte receiver limit. {detail}");
+            }
+        });
+        receiver._application.UseWhen(
+            static context => context.GetEndpoint()?.Metadata.GetMetadata<GrpcMethodMetadata>() is null,
+            static httpBranch => httpBranch.UseRequestDecompression());
         receiver._application.MapPost("/v1/{signal}", receiver.ReceiveAsync);
         receiver._application.MapGrpcService<OtlpGrpcService>();
         var transferred = false;
@@ -179,37 +215,30 @@ public sealed class OtlpReceiver : IAsyncDisposable
 
         // Reject a declared oversize payload before Kestrel's first body read marks the connection
         // as a bad request. This lets the client receive the OTLP Status before uploading the body.
-        if (context.Request.ContentLength > MaximumPayloadBytes)
+        if (context.Request.ContentLength > _maxPayloadBytes)
         {
             await FailAsync(context, signal, 413, Code.ResourceExhausted,
-                "The OTLP payload exceeds the 16 MiB receiver limit.");
+                $"The OTLP payload exceeds the {_maxPayloadBytes}-byte receiver limit.");
             return;
         }
 
         try
         {
-            await using var input = encoding == "gzip"
-                ? new GZipStream(context.Request.Body, CompressionMode.Decompress, true)
-                : null;
             using var buffer = new MemoryStream();
-            var source = (Stream?)input ?? context.Request.Body;
-            var chunk = new byte[8192];
-            int read;
-            while ((read = await source.ReadAsync(chunk, context.RequestAborted).ConfigureAwait(false)) != 0)
-            {
-                if (buffer.Length + read > MaximumPayloadBytes)
-                {
-                    await FailAsync(context, signal, 413, Code.ResourceExhausted, "The decompressed OTLP payload exceeds the 16 MiB receiver limit.");
-                    return;
-                }
-
-                buffer.Write(chunk, 0, read);
-            }
+            // Kestrel bounds wire bytes; request decompression applies that same limit to
+            // decoded bytes, including chunked requests with no Content-Length.
+            // https://learn.microsoft.com/aspnet/core/fundamentals/middleware/request-decompression#request-size-limits
+            await context.Request.Body.CopyToAsync(buffer, context.RequestAborted).ConfigureAwait(false);
 
             var response = ProcessExport(signal, buffer.ToArray(), OtlpTransport.HttpProtobuf);
             context.Response.ContentType = "application/x-protobuf";
             await context.Response.Body.WriteAsync(response, context.RequestAborted)
                 .ConfigureAwait(false);
+        }
+        catch (BadHttpRequestException error) when (error.StatusCode == StatusCodes.Status413PayloadTooLarge)
+        {
+            await FailAsync(context, signal, 413, Code.ResourceExhausted,
+                $"The OTLP payload exceeds the {_maxPayloadBytes}-byte receiver limit.");
         }
         catch (Exception error) when (error is InvalidProtocolBufferException or InvalidDataException)
         {

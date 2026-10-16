@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0
+
+- Keep the testing receiver's 16 MiB default. Add a positive `maxPayloadBytes` startup argument shared by HTTP and gRPC, also available through `QylTest.TraceAsync`. Create receivers through the startup factory.
+- Use ASP.NET Core request decompression and body-size limits for HTTP, preserving decodable OTLP 413 errors. Bound both wire bytes and decoded output, including compressed requests without `Content-Length`.
+- Retain bounded gRPC per-message decompression and `ResourceExhausted` overflow responses. Report the configured byte limit in HTTP and gRPC diagnostics; verify default and custom exact/overflow boundaries with plain and gzip requests.
+
 ## 2.0.0
 
 - Receive traces, logs and metrics over OTLP/gRPC on a separate dynamic loopback port. HTTP and gRPC share decoding, partial-success diagnostics and original payload capture; exports identify their transport.

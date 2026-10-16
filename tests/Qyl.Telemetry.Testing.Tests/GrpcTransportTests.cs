@@ -130,30 +130,39 @@ public sealed class GrpcTransportTests
     }
 
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public async Task Grpc_bounds_the_decompressed_message_before_decoding(bool gzip)
+    [DataRow(1024, false)]
+    [DataRow(1024, true)]
+    [DataRow(16 * 1024 * 1024, false)]
+    [DataRow(16 * 1024 * 1024, true)]
+    public async Task Grpc_bounds_the_decompressed_message_before_decoding(int limit, bool gzip)
     {
-        await using var receiver = await OtlpReceiver.StartAsync(TestContext.CancellationToken);
+        await using var receiver = limit == 16 * 1024 * 1024
+            ? await OtlpReceiver.StartAsync(TestContext.CancellationToken)
+            : await OtlpReceiver.StartAsync(limit, TestContext.CancellationToken);
         using var channel = GrpcChannel.ForAddress(receiver.GrpcEndpoint);
         var headers = new Metadata();
         if (gzip) headers.Add("grpc-internal-encoding-request", "gzip");
         using var call = channel.CreateCallInvoker().AsyncUnaryCall(Export("traces"), null,
-            new CallOptions(headers, cancellationToken: TestContext.CancellationToken), new byte[16 * 1024 * 1024 + 1]);
+            new CallOptions(headers, cancellationToken: TestContext.CancellationToken), new byte[limit + 1]);
         var failure = await Assert.ThrowsExactlyAsync<RpcException>(() => call.ResponseAsync);
         Assert.AreEqual(StatusCode.ResourceExhausted, failure.StatusCode, failure.Status.Detail);
+        Assert.Contains($"{limit}-byte", failure.Status.Detail);
         Assert.IsEmpty(receiver.Snapshot().Requests);
         Assert.IsEmpty(receiver.Snapshot().Spans);
     }
 
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public async Task Grpc_accepts_a_valid_message_exactly_at_the_decompressed_limit(bool gzip)
+    [DataRow(1024, false)]
+    [DataRow(1024, true)]
+    [DataRow(16 * 1024 * 1024, false)]
+    [DataRow(16 * 1024 * 1024, true)]
+    public async Task Grpc_accepts_a_valid_message_exactly_at_the_decompressed_limit(int limit, bool gzip)
     {
-        await using var receiver = await OtlpReceiver.StartAsync(TestContext.CancellationToken);
+        await using var receiver = limit == 16 * 1024 * 1024
+            ? await OtlpReceiver.StartAsync(TestContext.CancellationToken)
+            : await OtlpReceiver.StartAsync(limit, TestContext.CancellationToken);
         using var channel = GrpcChannel.ForAddress(receiver.GrpcEndpoint);
-        var bytes = new byte[16 * 1024 * 1024];
+        var bytes = new byte[limit];
         // Unknown length-delimited field 127: two tag bytes, four length bytes, then data.
         bytes[0] = 0xfa; bytes[1] = 0x07;
         var length = bytes.Length - 6;
@@ -220,10 +229,13 @@ public sealed class GrpcTransportTests
             var waiting = receiver.AwaitAsync(snapshot => snapshot.Spans.Count > 0, TimeSpan.FromSeconds(10), TestContext.CancellationToken);
             await receiver.DisposeAsync();
             await Assert.ThrowsExactlyAsync<ObjectDisposedException>(() => waiting);
-            using var closed = channel.CreateCallInvoker().AsyncUnaryCall(Export("traces"), null,
+            // Verify the closed listener with a fresh connection, independently of how the
+            // previous HTTP/2 connection reports its graceful shutdown.
+            using var disconnected = GrpcChannel.ForAddress(receiver.GrpcEndpoint);
+            using var closed = disconnected.CreateCallInvoker().AsyncUnaryCall(Export("traces"), null,
                 new CallOptions(deadline: DateTime.UtcNow.AddSeconds(5), cancellationToken: TestContext.CancellationToken), []);
             var failure = await Assert.ThrowsExactlyAsync<RpcException>(() => closed.ResponseAsync);
-            Assert.AreEqual(StatusCode.Unavailable, failure.StatusCode);
+            Assert.AreEqual(StatusCode.Unavailable, failure.StatusCode, failure.Status.Detail);
             await Assert.ThrowsExactlyAsync<HttpRequestException>(() => TelemetryLifecycle.Http.GetAsync(receiver.Endpoint, TestContext.CancellationToken));
         }
         finally

@@ -61,7 +61,8 @@ var trace = await QylTest.TraceAsync(capture =>
     Require(metrics.ForceFlush(), "Metric flush failed.");
     activity.Stop();
     return Task.CompletedTask;
-}, t => t.Spans.Count == 1 && t.Logs.Count == 1 && t.Metrics.Count > 0);
+}, t => t.Spans.Count == 1 && t.Logs.Count == 1 && t.Metrics.Count > 0,
+    maxPayloadBytes: 16 * 1024 * 1024);
 var span = trace.Spans.Single();
 Require(span.TraceId == trace.TraceId && span.Name == "release.operation" && span.Kind == SpanKind.Server
     && span.Status == ActivityStatusCode.Ok && span.Scope is { Name: scope, Version: "1.0.0" }

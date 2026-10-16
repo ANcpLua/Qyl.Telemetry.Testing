@@ -19,7 +19,7 @@ internal sealed class BoundedGrpcCompressionProvider(ICompressionProvider inner,
     // https://github.com/grpc/grpc-dotnet/blob/4c6997a214601422dd66c5c74c1969db749479e9/src/Grpc.AspNetCore.Server/Internal/PipeExtensions.cs#L341-L415
     private sealed class BoundedReadStream(Stream inner, int maximumBytes) : Stream
     {
-        private int _read;
+        private long _read;
         public override bool CanRead => inner.CanRead;
         public override bool CanSeek => false;
         public override bool CanWrite => false;
@@ -34,11 +34,11 @@ internal sealed class BoundedGrpcCompressionProvider(ICompressionProvider inner,
 
         public override int Read(Span<byte> buffer)
         {
-            var count = inner.Read(buffer[..Math.Min(buffer.Length, maximumBytes - _read + 1)]);
+            var count = inner.Read(buffer[..(int)Math.Min(buffer.Length, maximumBytes - _read + 1)]);
             _read += count;
             if (_read > maximumBytes)
                 throw new RpcException(new Status(StatusCode.ResourceExhausted,
-                    "The decompressed OTLP payload exceeds the 16 MiB receiver limit."));
+                    $"The decompressed OTLP payload exceeds the {maximumBytes}-byte receiver limit."));
             return count;
         }
 
