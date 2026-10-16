@@ -93,7 +93,7 @@ matched to the request. HTTP status remains authoritative. The receiver accepts 
 exports receive a JSON-encoded error. Profiling-only string/key table references are ignored non-fatally: values become
 empty, unresolved keys are absent, and each warning remains in the export receipt and OTLP response. A warning does not
 increment the rejected-record count. Full receipt diagnostics remain available when optional response text is bounded.
-Dispose the receiver to stop the server and wake pending waits.
+A cancelled wait does not evaluate its condition and retains the caller's cancellation token. Dispose the receiver to stop the server and wake pending waits.
 
 The wire model comes from OpenTelemetry protobuf v1.11.1. Generated DTOs are internal. Canonical span, resource and
 scope models come from Qyl.Telemetry.SemanticConventions. Values preserve their wire types, including signed 64-bit

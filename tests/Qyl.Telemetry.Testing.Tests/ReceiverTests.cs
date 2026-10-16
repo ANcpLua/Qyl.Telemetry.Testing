@@ -87,6 +87,21 @@ public sealed class ReceiverTests
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task Precancelled_wait_does_not_evaluate_the_evidence_condition(bool ready)
+    {
+        await using var receiver = await OtlpReceiver.StartAsync(TestContext.CancellationToken);
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+        var evaluated = false;
+        var failure = await Assert.ThrowsAsync<OperationCanceledException>(() =>
+            receiver.AwaitAsync(_ => { evaluated = true; return ready; }, TimeSpan.FromSeconds(10), cancellation.Token));
+        Assert.AreEqual(cancellation.Token, failure.CancellationToken);
+        Assert.IsFalse(evaluated);
+    }
+
+    [TestMethod]
     public async Task Disposal_wakes_a_pending_condition_and_is_repeatable()
     {
         var receiver = await OtlpReceiver.StartAsync(TestContext.CancellationToken);

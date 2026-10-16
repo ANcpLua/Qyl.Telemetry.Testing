@@ -4,7 +4,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <Version>1.1.1</Version>
+        <Version>1.1.2</Version>
         <MSTestAnalysisMode>Recommended</MSTestAnalysisMode>
         <RepositoryUrl>https://github.com/ANcpLua/Qyl.Telemetry.Testing</RepositoryUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>

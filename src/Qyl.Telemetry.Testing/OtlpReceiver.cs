@@ -101,28 +101,33 @@ public sealed class OtlpReceiver : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(condition);
         using var deadline = new CancellationTokenSource(timeout);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
-        while (true)
+        try
         {
-            Task changed;
-            TelemetrySnapshot snapshot;
-            lock (_gate)
+            while (true)
             {
-                ObjectDisposedException.ThrowIf(_disposed, this);
-                snapshot = Snapshot();
-                changed = _changed.Task;
-            }
+                cancellationToken.ThrowIfCancellationRequested();
+                linked.Token.ThrowIfCancellationRequested();
+                Task changed;
+                TelemetrySnapshot snapshot;
+                lock (_gate)
+                {
+                    ObjectDisposedException.ThrowIf(_disposed, this);
+                    snapshot = Snapshot();
+                    changed = _changed.Task;
+                }
 
-            if (condition(snapshot)) return snapshot;
-            try
-            {
+                if (condition(snapshot)) return snapshot;
                 await changed.WaitAsync(linked.Token).ConfigureAwait(false);
             }
-            catch (OperationCanceledException) when (deadline.IsCancellationRequested &&
-                                                     !cancellationToken.IsCancellationRequested)
-            {
-                throw new TimeoutException(
-                    "The OTLP receiver did not observe the required evidence before the deadline.");
-            }
+        }
+        catch (OperationCanceledException error) when (cancellationToken.IsCancellationRequested)
+        {
+            throw new TaskCanceledException("The OTLP evidence wait was cancelled.", error, cancellationToken);
+        }
+        catch (OperationCanceledException) when (deadline.IsCancellationRequested)
+        {
+            throw new TimeoutException(
+                "The OTLP receiver did not observe the required evidence before the deadline.");
         }
     }
 

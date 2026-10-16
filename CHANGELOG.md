@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2
+
+- Honor cancellation before evaluating an evidence condition, including when the condition would already pass. Preserve the caller's cancellation token and check the deadline during continuous arrivals.
+
 ## 1.1.1
 
 - Derive service calls from unique span identities so retransmitting an export cannot invent calls. Keep every raw span observation and original export, and retain distinct calls between the same services.
