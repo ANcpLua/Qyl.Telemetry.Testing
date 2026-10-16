@@ -21,7 +21,9 @@ public sealed class SdkSignalTests
     [UsedImplicitly] public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
-    public async Task Official_sdk_exports_trace_named_log_and_partitioned_counter()
+    [DataRow(OtlpTransport.HttpProtobuf)]
+    [DataRow(OtlpTransport.Grpc)]
+    public async Task Official_sdk_exports_trace_named_log_and_partitioned_counter(OtlpTransport transport)
     {
         var sourceName = "sdk-" + Guid.NewGuid().ToString("N");
         var result = await QylTest.TraceAsync(test =>
@@ -31,15 +33,15 @@ public sealed class SdkSignalTests
                     "https://opentelemetry.io/schemas/1.44.0");
                 using var source = new ActivitySource(sourceName, "2.0.1");
                 using var traces = Sdk.CreateTracerProviderBuilder().AddSource(sourceName).SetResourceBuilder(resource)
-                    .AddOtlpExporter(o => Configure(o, test.Endpoint, "traces")).Build();
+                    .AddOtlpExporter(o => Configure(o, test, "traces", transport)).Build();
                 using var meter = new Meter(sourceName, "2.0.1");
                 using var metrics = Sdk.CreateMeterProviderBuilder().AddMeter(sourceName).SetResourceBuilder(resource)
-                    .AddOtlpExporter(o => Configure(o, test.Endpoint, "metrics")).Build();
+                    .AddOtlpExporter(o => Configure(o, test, "metrics", transport)).Build();
                 using var logs = LoggerFactory.Create(b => b.AddOpenTelemetry(o =>
                 {
                     o.Version = "2.0.1";
                     o.SchemaUrl = "https://opentelemetry.io/schemas/1.44.0";
-                    o.SetResourceBuilder(resource).AddOtlpExporter(e => Configure(e, test.Endpoint, "logs"));
+                    o.SetResourceBuilder(resource).AddOtlpExporter(e => Configure(e, test, "logs", transport));
                 }));
                 using var activity = source.CreateActivity("sdk.operation", ActivityKind.Server)!.Start();
                 activity.SetStatus(ActivityStatusCode.Ok).SetTag("http.request.method", "POST");
@@ -50,6 +52,9 @@ public sealed class SdkSignalTests
                 return Task.CompletedTask;
             }, t => t.Spans.Count == 1 && t.Logs.Count == 1 && t.Metrics.Count > 0,
             cancellationToken: TestContext.CancellationToken);
+        Assert.IsGreaterThanOrEqualTo(3, result.Capture.Requests.Count);
+        Assert.IsTrue(result.Capture.Requests.All(request => request.Transport == transport && !request.Payload.IsEmpty));
+        Assert.IsTrue(result.Capture.Receipts.All(receipt => receipt.Transport == transport && receipt is { Rejected: 0, Error: null }));
         var span = Assert.ContainsSingle(result.Spans);
         Assert.AreEqual(result.TraceId, span.TraceId);
         Assert.AreEqual("sdk.operation", span.Name);
@@ -77,10 +82,10 @@ public sealed class SdkSignalTests
         Assert.AreEqual(7L, Assert.ContainsSingle(sum.Points).Value);
     }
 
-    private static void Configure(OtlpExporterOptions options, Uri endpoint, string signal)
+    private static void Configure(OtlpExporterOptions options, QylCapture capture, string signal, OtlpTransport transport)
     {
-        options.Protocol = OtlpExportProtocol.HttpProtobuf;
-        options.Endpoint = new Uri(endpoint, "v1/" + signal);
+        options.Protocol = transport == OtlpTransport.Grpc ? OtlpExportProtocol.Grpc : OtlpExportProtocol.HttpProtobuf;
+        options.Endpoint = transport == OtlpTransport.Grpc ? capture.GrpcEndpoint : new Uri(capture.Endpoint, "v1/" + signal);
         options.ExportProcessorType = ExportProcessorType.Simple;
     }
 }

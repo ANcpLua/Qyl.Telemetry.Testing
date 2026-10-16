@@ -128,13 +128,24 @@ public sealed record ExemplarRecord(
 [PublicAPI]
 public sealed record ExportReceipt(string Signal, long Accepted, long Rejected, string? Error)
 {
+    public OtlpTransport Transport { get; init; }
     public IReadOnlyList<string> Warnings { get; init; } = [];
 }
 
 /// <summary>The uncompressed protobuf export payload, retained before record decoding.</summary>
 /// <remarks>Unknown protobuf fields and records rejected by the decoder remain in this payload.</remarks>
 [PublicAPI]
-public sealed record OtlpExportRequest(string Signal, ReadOnlyMemory<byte> Payload);
+public sealed record OtlpExportRequest(string Signal, ReadOnlyMemory<byte> Payload)
+{
+    public OtlpTransport Transport { get; init; }
+}
+
+[PublicAPI]
+public enum OtlpTransport
+{
+    HttpProtobuf,
+    Grpc
+}
 
 [PublicAPI]
 public sealed record TelemetrySnapshot(

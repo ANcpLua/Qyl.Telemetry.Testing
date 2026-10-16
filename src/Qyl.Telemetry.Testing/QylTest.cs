@@ -38,6 +38,7 @@ public sealed class QylCapture
     }
 
     public Uri Endpoint => _receiver.Endpoint;
+    public Uri GrpcEndpoint => _receiver.GrpcEndpoint;
     public string TraceId { get; }
     public string TraceParent { get; }
     public MetricPartition Partition { get; }

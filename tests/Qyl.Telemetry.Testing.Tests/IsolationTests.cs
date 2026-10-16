@@ -54,7 +54,9 @@ public sealed class IsolationTests
                     o.ExportProcessorType = ExportProcessorType.Simple;
                 }).Build();
             using var span = source.StartActivity("row." + row, ActivityKind.Client)!;
-            span.SetStatus(ActivityStatusCode.Ok).SetTag("qyl.app.row", row);
+            string[] labels = ["first", "second"];
+            span.SetStatus(ActivityStatusCode.Ok).SetTag("checkout.row", row)
+                .SetTag("qyl.app.row", row).SetTag("checkout.accepted", false).SetTag("checkout.labels", labels);
             span.Stop();
             await test.AwaitAsync(s => s.Spans.Count == 1, TimeSpan.FromSeconds(10), TestContext.CancellationToken);
             Assert.AreEqual(test.TraceId, test.Read().TraceId);
@@ -67,7 +69,13 @@ public sealed class IsolationTests
         Assert.AreEqual(SpanKind.Client, observed.Kind);
         Assert.AreEqual(ActivityStatusCode.Ok, observed.Status);
         Assert.StartsWith("isolated-", observed.Scope?.Name);
+        Assert.AreEqual(row, observed.GetInt64("checkout.row"));
         Assert.AreEqual(row, observed.GetInt64("qyl.app.row"));
+        Assert.IsFalse(observed.GetBoolean("checkout.accepted"));
+        Assert.AreSequenceEqual(["first", "second"], observed.GetStrings("checkout.labels")!);
+        var report = RegistryConformance.Check(capture.Capture);
+        Assert.IsTrue(report.IsConformant, string.Join(Environment.NewLine, report.Issues));
+        Assert.Contains("qyl.app.row", report.CustomAttributes);
     }
 
     [TestMethod]

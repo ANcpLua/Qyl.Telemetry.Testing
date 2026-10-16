@@ -1,20 +1,22 @@
 # Qyl.Telemetry.Testing
 
 Capture OTLP telemetry inside a .NET test and inspect what was exported. The receiver accepts traces, logs and metrics
-over OTLP/HTTP protobuf, including gzip. It keeps typed values, resource and scope metadata, ordered span events and
+over OTLP/HTTP protobuf and OTLP/gRPC, including gzip. It keeps typed values, resource and scope metadata, ordered span events and
 links, named log events and all five metric shapes. Fully read protobuf exports are retained before decoding in
 `Snapshot().Requests`, including unknown fields and rejected records. JSON captures include every metric's data shape
 and points; the original payload provides the authoritative protobuf representation.
 
 The package targets .NET 10 and uses the shared `Microsoft.AspNetCore.App` framework. Its native test integration uses
-MSTest 4.5.1 and Microsoft.Testing.Platform 2.5.1. Version 1.1.0 adds diagnostic capture fidelity and OTLP
-error handling.
+MSTest 4.5.1 and Microsoft.Testing.Platform 2.5.1. Version 2.0.0 consumes SemanticConventions 13.0.0. Application attributes keep their
+original names and types; read them through `SpanRecord.Attributes` and the typed getters.
 
 ## Capture a trace
 
 Configure the application's OTLP exporters with the endpoint supplied to the action. Each action has a W3C trace root
 and its own receiver. For the .NET OTLP exporter, use `new Uri(capture.Endpoint, "v1/traces")`, `"v1/logs"` or
-`"v1/metrics"` with `OtlpExportProtocol.HttpProtobuf`. Propagate `capture.TraceParent` when calling a separate service.
+`"v1/metrics"` with `OtlpExportProtocol.HttpProtobuf`. For gRPC, set `OtlpExportProtocol.Grpc` and use `capture.GrpcEndpoint`
+without a signal path. Both endpoints bind to separate dynamic loopback ports. Propagate `capture.TraceParent` when
+calling a separate service.
 
 ```csharp
 var trace = await QylTest.TraceAsync(
@@ -85,7 +87,7 @@ separate registry audit does not infer definition-specific required attributes.
 
 ## Receiver contract
 
-`OtlpReceiver.StartAsync()` exposes a loopback endpoint bound directly to an available port. `Snapshot()` returns
+`OtlpReceiver.StartAsync()` exposes `Endpoint` for HTTP and `GrpcEndpoint` for HTTP/2 gRPC, each bound directly to an available loopback port. `Snapshot()` returns
 received records; `AwaitAsync(condition, timeout, cancellationToken)` waits for a condition without polling sleeps.
 
 HTTP failures return a decodable Google protobuf `Status` and a developer-facing message, with the response encoding
@@ -93,15 +95,22 @@ matched to the request. HTTP status remains authoritative. The receiver accepts 
 exports receive a JSON-encoded error. Profiling-only string/key table references are ignored non-fatally: values become
 empty, unresolved keys are absent, and each warning remains in the export receipt and OTLP response. A warning does not
 increment the rejected-record count. Full receipt diagnostics remain available when optional response text is bounded.
-A cancelled wait does not evaluate its condition and retains the caller's cancellation token. Dispose the receiver to stop the server and wake pending waits.
+`OtlpExportRequest.Transport` and `ExportReceipt.Transport` identify how each export arrived. gRPC returns native status
+codes for transport failures and the same per-record partial-success acknowledgements as HTTP. Malformed protobuf remains
+in the original requests and returns `InvalidArgument`. The framework rejects oversized messages before capture; gzip
+decompression is bounded while reading. Incomplete or cancelled uploads do not create a decoded export.
+
+A cancelled wait does not evaluate its condition and retains the caller's cancellation token. Dispose the receiver to
+close both listeners and wake pending waits.
 
 The wire model comes from OpenTelemetry protobuf v1.11.1. Generated DTOs are internal. Canonical span, resource and
 scope models come from Qyl.Telemetry.SemanticConventions. Values preserve their wire types, including signed 64-bit
 integers, doubles, bytes, arrays and maps. Unsigned timestamps and metric counts remain unsigned. Absent optional values
 remain absent.
 
-The receiver supports protobuf, not OTLP JSON or gRPC. Unknown signal routes return 404; unsupported content types or
-encodings return 415. Requests and decompressed bodies are limited to 16 MiB. Malformed protobuf returns 400. Duplicate
+The HTTP receiver supports protobuf, not OTLP JSON. Unknown HTTP signal routes return 404; unsupported content types or
+encodings return 415. HTTP requests and gRPC messages are limited to 16 MiB, including after gzip decompression.
+Malformed HTTP protobuf returns 400; oversized gRPC messages return `ResourceExhausted`. Duplicate
 attribute keys and malformed IDs reject the affected record and return an OTLP partial-success count; accepted records
 remain captured. This in-process receiver is intended for tests, not production ingestion.
 

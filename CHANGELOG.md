@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.0
+
+- Receive traces, logs and metrics over OTLP/gRPC on a separate dynamic loopback port. HTTP and gRPC share decoding, partial-success diagnostics and original payload capture; exports identify their transport.
+- Preserve original gRPC message bytes, including unknown fields and noncanonical wire encodings. Bound gzip decompression to 16 MiB while reading, honor cancellation and close both listeners on disposal.
+- Verify both transports with real OpenTelemetry 1.20.0 exporters and package consumers, plus gRPC wire, error, boundary and lifecycle tests.
+
+- Consume SemanticConventions 13.0.0. Captured attributes retain their original names and native types; removed stringifying `App` views are replaced by `SpanRecord.Attributes` and its typed getters.
+- Verify real SDK exports with application-owned keys and historical `qyl.app` names without imposing the obsolete string template on them.
+
 ## 1.1.2
 
 - Honor cancellation before evaluating an evidence condition, including when the condition would already pass. Preserve the caller's cancellation token and check the deadline during continuous arrivals.

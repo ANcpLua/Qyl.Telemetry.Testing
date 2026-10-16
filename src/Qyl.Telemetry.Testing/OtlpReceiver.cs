@@ -2,11 +2,13 @@ using System.Collections.ObjectModel;
 using System.IO.Compression;
 using System.Net;
 using Google.Protobuf;
+using Grpc.AspNetCore.Server.Model;
+using Grpc.Core;
+using Grpc.Net.Compression;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -23,6 +25,7 @@ namespace Qyl.Telemetry.Testing;
 [PublicAPI]
 public sealed class OtlpReceiver : IAsyncDisposable
 {
+    private const int MaximumPayloadBytes = 16 * 1024 * 1024;
     private readonly Lock _gate = new();
     private readonly List<LogRecord> _logs = [];
     private readonly List<MetricRecord> _metrics = [];
@@ -34,6 +37,7 @@ public sealed class OtlpReceiver : IAsyncDisposable
     private bool _disposed;
 
     public Uri Endpoint { get; private set; } = null!;
+    public Uri GrpcEndpoint { get; private set; } = null!;
 
     public async ValueTask DisposeAsync()
     {
@@ -60,20 +64,40 @@ public sealed class OtlpReceiver : IAsyncDisposable
         var receiver = new OtlpReceiver();
         var builder = WebApplication.CreateSlimBuilder();
         builder.Logging.ClearProviders();
+        ListenOptions? http = null, grpc = null;
         builder.WebHost.ConfigureKestrel(options =>
         {
-            options.Listen(IPAddress.Loopback, 0);
-            options.Limits.MaxRequestBodySize = 16 * 1024 * 1024;
+            options.Listen(IPAddress.Loopback, 0, listen =>
+            {
+                listen.Protocols = HttpProtocols.Http1;
+                http = listen;
+            });
+            options.Listen(IPAddress.Loopback, 0, listen =>
+            {
+                listen.Protocols = HttpProtocols.Http2;
+                grpc = listen;
+            });
+            // HTTP bounds its body while reading; gRPC bounds the decompressed message.
+            options.Limits.MaxRequestBodySize = null;
         });
+        builder.Services.AddGrpc(options =>
+        {
+            options.MaxReceiveMessageSize = MaximumPayloadBytes;
+            options.CompressionProviders.Clear();
+            options.CompressionProviders.Add(new BoundedGrpcCompressionProvider(
+                new GzipCompressionProvider(CompressionLevel.Fastest), MaximumPayloadBytes));
+        });
+        builder.Services.AddSingleton(new OtlpGrpcService(receiver));
+        builder.Services.AddSingleton<IServiceMethodProvider<OtlpGrpcService>, OtlpGrpcMethodProvider>();
         receiver._application = builder.Build();
         receiver._application.MapPost("/v1/{signal}", receiver.ReceiveAsync);
+        receiver._application.MapGrpcService<OtlpGrpcService>();
         var transferred = false;
         try
         {
             await receiver._application.StartAsync(cancellationToken).ConfigureAwait(false);
-            var addresses = receiver._application.Services.GetRequiredService<IServer>().Features
-                .Get<IServerAddressesFeature>()!;
-            receiver.Endpoint = new Uri(addresses.Addresses.Single() + "/");
+            receiver.Endpoint = new UriBuilder("http", IPAddress.Loopback.ToString(), http!.IPEndPoint!.Port).Uri;
+            receiver.GrpcEndpoint = new UriBuilder("http", IPAddress.Loopback.ToString(), grpc!.IPEndPoint!.Port).Uri;
             transferred = true;
             return receiver;
         }
@@ -155,14 +179,13 @@ public sealed class OtlpReceiver : IAsyncDisposable
 
         // Reject a declared oversize payload before Kestrel's first body read marks the connection
         // as a bad request. This lets the client receive the OTLP Status before uploading the body.
-        if (context.Request.ContentLength > 16 * 1024 * 1024)
+        if (context.Request.ContentLength > MaximumPayloadBytes)
         {
             await FailAsync(context, signal, 413, Code.ResourceExhausted,
                 "The OTLP payload exceeds the 16 MiB receiver limit.");
             return;
         }
 
-        var decoder = new OtlpDecode();
         try
         {
             await using var input = encoding == "gzip"
@@ -174,7 +197,7 @@ public sealed class OtlpReceiver : IAsyncDisposable
             int read;
             while ((read = await source.ReadAsync(chunk, context.RequestAborted).ConfigureAwait(false)) != 0)
             {
-                if (buffer.Length + read > 16 * 1024 * 1024)
+                if (buffer.Length + read > MaximumPayloadBytes)
                 {
                     await FailAsync(context, signal, 413, Code.ResourceExhausted, "The decompressed OTLP payload exceeds the 16 MiB receiver limit.");
                     return;
@@ -183,108 +206,123 @@ public sealed class OtlpReceiver : IAsyncDisposable
                 buffer.Write(chunk, 0, read);
             }
 
-            var bytes = buffer.ToArray();
-            lock (_gate)
-            {
-                _requests.Add(new OtlpExportRequest(signal, bytes));
-            }
-            long accepted = 0, rejected = 0;
-            var errors = new List<string>();
-
-            void Add<TInput, TOutput>(TInput sourceRecord, Func<TInput, TOutput> decode, List<TOutput> destination,
-                long units = 1)
-            {
-                try
-                {
-                    var value = decode(sourceRecord);
-                    lock (_gate)
-                    {
-                        destination.Add(value);
-                    }
-
-                    accepted += units;
-                }
-                catch (InvalidDataException error)
-                {
-                    rejected += units;
-                    errors.Add(error.Message);
-                }
-            }
-
-            IMessage response;
-            switch (signal)
-            {
-                case "traces":
-                {
-                    foreach (var resource in ExportTraceServiceRequest.Parser.ParseFrom(bytes).ResourceSpans)
-                    foreach (var scope in resource.ScopeSpans)
-                    foreach (var span in scope.Spans)
-                        Add(span,
-                            s => decoder.Span(s, decoder.Resource(resource.Resource, resource.SchemaUrl),
-                                decoder.Scope(scope.Scope, scope.SchemaUrl)), _spans);
-                    response = new ExportTraceServiceResponse
-                    {
-                        PartialSuccess = rejected == 0 && decoder.Warnings.Count == 0
-                            ? null
-                            : new ExportTracePartialSuccess
-                                { RejectedSpans = rejected, ErrorMessage = ResponseMessage(errors.Concat(decoder.Warnings)) }
-                    };
-                    break;
-                }
-                case "logs":
-                {
-                    foreach (var resource in ExportLogsServiceRequest.Parser.ParseFrom(bytes).ResourceLogs)
-                    foreach (var scope in resource.ScopeLogs)
-                    foreach (var log in scope.LogRecords)
-                        Add(log,
-                            l => decoder.Log(l, decoder.Resource(resource.Resource, resource.SchemaUrl),
-                                decoder.Scope(scope.Scope, scope.SchemaUrl)), _logs);
-                    response = new ExportLogsServiceResponse
-                    {
-                        PartialSuccess = rejected == 0 && decoder.Warnings.Count == 0
-                            ? null
-                            : new ExportLogsPartialSuccess
-                                { RejectedLogRecords = rejected, ErrorMessage = ResponseMessage(errors.Concat(decoder.Warnings)) }
-                    };
-                    break;
-                }
-                default:
-                {
-                    foreach (var resource in ExportMetricsServiceRequest.Parser.ParseFrom(bytes).ResourceMetrics)
-                    foreach (var scope in resource.ScopeMetrics)
-                    foreach (var metric in scope.Metrics)
-                        Add(metric,
-                            m => decoder.Metric(m, decoder.Resource(resource.Resource, resource.SchemaUrl),
-                                decoder.Scope(scope.Scope, scope.SchemaUrl)), _metrics, PointCount(metric));
-                    response = new ExportMetricsServiceResponse
-                    {
-                        PartialSuccess = rejected == 0 && decoder.Warnings.Count == 0
-                            ? null
-                            : new ExportMetricsPartialSuccess
-                                { RejectedDataPoints = rejected, ErrorMessage = ResponseMessage(errors.Concat(decoder.Warnings)) }
-                    };
-                    break;
-                }
-            }
-
-            foreach (var warning in decoder.Warnings)
-                _application.Logger.LogWarning("OTLP decoding warning: {Warning}", warning);
-            Publish(new ExportReceipt(signal, accepted, rejected,
-                errors.Count == 0 ? null : string.Join(" ", errors.Distinct()))
-            {
-                Warnings = decoder.Warnings.AsReadOnlySnapshot()
-            });
+            var response = ProcessExport(signal, buffer.ToArray(), OtlpTransport.HttpProtobuf);
             context.Response.ContentType = "application/x-protobuf";
-            await context.Response.Body.WriteAsync(response.ToByteArray(), context.RequestAborted)
+            await context.Response.Body.WriteAsync(response, context.RequestAborted)
                 .ConfigureAwait(false);
-        }
-        catch (BadHttpRequestException error) when (error.StatusCode == StatusCodes.Status413PayloadTooLarge)
-        {
-            await FailAsync(context, signal, error.StatusCode, Code.ResourceExhausted, error.Message);
         }
         catch (Exception error) when (error is InvalidProtocolBufferException or InvalidDataException)
         {
             await FailAsync(context, signal, 400, Code.InvalidArgument, error.Message);
+        }
+    }
+
+    internal byte[] ReceiveGrpc(string signal, byte[] payload)
+    {
+        try
+        {
+            return ProcessExport(signal, payload, OtlpTransport.Grpc);
+        }
+        catch (Exception error) when (error is InvalidProtocolBufferException or InvalidDataException)
+        {
+            Publish(new ExportReceipt(signal, 0, 0, error.Message) { Transport = OtlpTransport.Grpc });
+            throw new RpcException(new Grpc.Core.Status(StatusCode.InvalidArgument, error.Message));
+        }
+    }
+
+    private byte[] ProcessExport(string signal, byte[] bytes, OtlpTransport transport)
+    {
+        lock (_gate)
+        {
+            _requests.Add(new OtlpExportRequest(signal, bytes) { Transport = transport });
+        }
+        var decoder = new OtlpDecode();
+        long accepted = 0, rejected = 0;
+        var errors = new List<string>();
+
+        IMessage response;
+        switch (signal)
+        {
+            case "traces":
+            {
+                foreach (var resource in ExportTraceServiceRequest.Parser.ParseFrom(bytes).ResourceSpans)
+                foreach (var scope in resource.ScopeSpans)
+                foreach (var span in scope.Spans)
+                    Add(span,
+                        s => decoder.Span(s, decoder.Resource(resource.Resource, resource.SchemaUrl),
+                            decoder.Scope(scope.Scope, scope.SchemaUrl)), _spans);
+                response = new ExportTraceServiceResponse
+                {
+                    PartialSuccess = rejected == 0 && decoder.Warnings.Count == 0
+                        ? null
+                        : new ExportTracePartialSuccess
+                            { RejectedSpans = rejected, ErrorMessage = ResponseMessage(errors.Concat(decoder.Warnings)) }
+                };
+                break;
+            }
+            case "logs":
+            {
+                foreach (var resource in ExportLogsServiceRequest.Parser.ParseFrom(bytes).ResourceLogs)
+                foreach (var scope in resource.ScopeLogs)
+                foreach (var log in scope.LogRecords)
+                    Add(log,
+                        l => decoder.Log(l, decoder.Resource(resource.Resource, resource.SchemaUrl),
+                            decoder.Scope(scope.Scope, scope.SchemaUrl)), _logs);
+                response = new ExportLogsServiceResponse
+                {
+                    PartialSuccess = rejected == 0 && decoder.Warnings.Count == 0
+                        ? null
+                        : new ExportLogsPartialSuccess
+                            { RejectedLogRecords = rejected, ErrorMessage = ResponseMessage(errors.Concat(decoder.Warnings)) }
+                };
+                break;
+            }
+            default:
+            {
+                foreach (var resource in ExportMetricsServiceRequest.Parser.ParseFrom(bytes).ResourceMetrics)
+                foreach (var scope in resource.ScopeMetrics)
+                foreach (var metric in scope.Metrics)
+                    Add(metric,
+                        m => decoder.Metric(m, decoder.Resource(resource.Resource, resource.SchemaUrl),
+                            decoder.Scope(scope.Scope, scope.SchemaUrl)), _metrics, PointCount(metric));
+                response = new ExportMetricsServiceResponse
+                {
+                    PartialSuccess = rejected == 0 && decoder.Warnings.Count == 0
+                        ? null
+                        : new ExportMetricsPartialSuccess
+                            { RejectedDataPoints = rejected, ErrorMessage = ResponseMessage(errors.Concat(decoder.Warnings)) }
+                };
+                break;
+            }
+        }
+
+        foreach (var warning in decoder.Warnings)
+            _application.Logger.LogWarning("OTLP decoding warning: {Warning}", warning);
+        Publish(new ExportReceipt(signal, accepted, rejected,
+            errors.Count == 0 ? null : string.Join(" ", errors.Distinct()))
+        {
+            Warnings = decoder.Warnings.AsReadOnlySnapshot(), Transport = transport
+        });
+        return response.ToByteArray();
+
+        void Add<TInput, TOutput>(TInput sourceRecord, Func<TInput, TOutput> decode, List<TOutput> destination,
+            long units = 1)
+        {
+            try
+            {
+                var value = decode(sourceRecord);
+                lock (_gate)
+                {
+                    destination.Add(value);
+                }
+
+                accepted += units;
+            }
+            catch (InvalidDataException error)
+            {
+                rejected += units;
+                errors.Add(error.Message);
+            }
         }
     }
 

@@ -5,9 +5,10 @@
     </PropertyGroup>
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App"/>
-        <PackageReference Include="Qyl.Telemetry.SemanticConventions" Version="12.0.0"/>
+        <PackageReference Include="Qyl.Telemetry.SemanticConventions" Version="13.0.0"/>
         <PackageReference Include="Google.Api.CommonProtos" Version="2.17.0"/>
         <PackageReference Include="Google.Protobuf" Version="3.36.2"/>
+        <PackageReference Include="Grpc.AspNetCore.Server" Version="2.84.0"/>
         <PackageReference Include="Grpc.Tools" Version="2.84.0" PrivateAssets="all"/>
         <PackageReference Include="MSTest.TestFramework" Version="4.5.1"/>
         <PackageReference Include="MSTest.Analyzers" Version="4.5.1" PrivateAssets="all"/>
