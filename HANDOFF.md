@@ -1,21 +1,17 @@
-# Qyl.Telemetry.Testing 1.1.0 candidate; 1.0.0 published
+# Qyl.Telemetry.Testing 1.1.0 published and verified
 
-The primary owns this repository. All agents are finished. SemanticConventions 12.0.0 is publicly indexed and its
-producer release is VERIFIED at commit b7285bb. Testing restores that public package from a fresh public-only cache.
-OpenTelemetry test exporters are now 1.20.0; the final native Pack gate passed in
-artifacts/semconv12-diagnostics-pack-2.log. Testing 1.0.0 is published and publicly indexed at source bba0390. The native
-detached verifier finished with VERIFIED after a public-only restore and a live consumer smoke; evidence is
-artifacts/release-1.0.0-verify.log.
+The primary continues alone. Release source 7a7d46f consumes public SemanticConventions 12.0.0 (b7285bb).
+Native release completed: all 168 tests passed with zero skips, zero INFO-or-higher inspections, unfiltered coverage,
+and the packed consumer smoke. NuGet indexing and the public-only live receiver consumer passed; the native log ends
+VERIFIED (observed at 2026-10-16T18:52:37Z). Evidence: artifacts/release-1.1.0-{driver,verify}.log and
+artifacts/semconv12-diagnostics-{pack-2,smoke}.log. The DLL restored for the AutoInstrumentation full gate exactly
+matches the public 1.1.0 DLL. The original owner formatting is preserved.
 
-## Current candidate
-
-The owner formatting is preserved in main fcb51c2. Candidate 1.1.0 fixes empty metric data in diagnostic JSON, retains
-uncompressed original protobuf export payloads before decoding, returns official Google protobuf Status HTTP errors,
-and treats profiling-only string/key table references as non-fatal warnings. Native Pack passed 168 tests, no failures
-or skips, and zero INFO-or-higher findings (artifacts/semconv12-diagnostics-pack-2.log). The packed consumer passed the new
-payload, metric JSON and decoded error checks (artifacts/semconv12-diagnostics-smoke.log). A declared oversize request is
-verified using Expect100-continue; eager oversized HTTP1 uploads can still surface a socket broken pipe while Kestrel
-closes the rejected body. No failed attempt or raw coverage was hidden. Publication is pending the current producer wave.
+Version 1.1.0 adds complete polymorphic metric JSON, uncompressed original protobuf exports, official Google.Rpc.Status
+HTTP errors and nonfatal profiling string/key references with retained warnings. The unfiltered graph measures
+4650/7529 lines and 495/1612 branches. Eager oversized HTTP/1.1 uploads can still surface a broken pipe while Kestrel
+closes the rejected body; the declared-size error response is verified using Expect100-continue. Earlier failed
+attempts remain in artifacts. The receiver's HTTP/JSON support is for diagnostic errors, not JSON OTLP ingestion.
 
 ## Implementation
 

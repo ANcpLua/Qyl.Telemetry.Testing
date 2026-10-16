@@ -3,7 +3,7 @@
   "sdk": "10.0.401",
   "mstest": "4.5.1",
   "mtp": "2.5.1",
-  "status": "Native Pack and packed consumer passed on public SemanticConventions 12.0.0; native 1.1.0 publication is pending.",
+  "status": "Testing 1.1.0 published and native VERIFIED: public-only restore and live receiver consumer passed.",
   "native_tests": {
     "passed": 168,
     "failed": 0,
@@ -224,14 +224,13 @@
     "log": "artifacts/semconv12-diagnostics-pack-2.log"
   },
   "release": {
-    "source_commit": "bba0390",
-    "tag": "v1.0.0",
-    "url": "https://github.com/ANcpLua/Qyl.Telemetry.Testing/releases/tag/v1.0.0",
-    "public_package": "https://www.nuget.org/packages/Qyl.Telemetry.Testing/1.0.0",
-    "native_verification": "artifacts/release-1.0.0-verify.log",
+    "source_commit": "7a7d46f",
+    "tag": "v1.1.0",
+    "url": "https://github.com/ANcpLua/Qyl.Telemetry.Testing/releases/tag/v1.1.0",
+    "public_package": "https://www.nuget.org/packages/Qyl.Telemetry.Testing/1.1.0",
+    "native_verification": "artifacts/release-1.1.0-verify.log",
     "result": "VERIFIED; public-only restore and live receiver smoke passed",
-    "baseline_version": "1.0.0",
-    "candidate_version": "1.1.0"
+    "verified_observed_at_utc": "2026-10-16T18:52:37Z"
   },
   "previous_dependency_symbol_audit": {
     "package": "Qyl.Telemetry.SemanticConventions",
@@ -242,5 +241,15 @@
     "public_availability": "published and verified by native producer release at 2026-10-16T16:41:50Z",
     "symbol_provenance": "artifacts/catalog-symbol-provenance-verified.log",
     "finding": "Public DLL CodeView d78a6521-13b6-44bd-ab4e-ca1abd7b4842 matches the local producer PDB; the earlier local candidate CodeView 0a3f22ec-6fe9-4eaf-a77c-95b95ea79414 does not."
+  },
+  "previous_release": {
+    "source_commit": "bba0390",
+    "tag": "v1.0.0",
+    "url": "https://github.com/ANcpLua/Qyl.Telemetry.Testing/releases/tag/v1.0.0",
+    "public_package": "https://www.nuget.org/packages/Qyl.Telemetry.Testing/1.0.0",
+    "native_verification": "artifacts/release-1.0.0-verify.log",
+    "result": "VERIFIED; public-only restore and live receiver smoke passed",
+    "baseline_version": "1.0.0",
+    "candidate_version": "1.1.0"
   }
 }
