@@ -1,65 +1,77 @@
-# MSBuild organization
+# MSBuild mechanics
 
-## Place policy at the right scope
+## Imports and evaluation
 
-`Microsoft.Common.props` searches upward from each project and imports the
-nearest `Directory.Build.props` early. Put shared defaults there; the project
-can subsequently override them. `Microsoft.Common.targets` imports the nearest
-`Directory.Build.targets` later. Neither hierarchy automatically merges every
-ancestor: an inner file must explicitly import its intended parent.
+`Microsoft.Common.props` searches upward from a project for the nearest
+`Directory.Build.props` and imports it early. A project body can override
+properties assigned earlier. `Microsoft.Common.targets` imports the nearest
+`Directory.Build.targets` later; subsequent imports can still affect values.
 
-Consolidate nullable, implicit usings, warnings, analysis and repository metadata
-without losing exceptions needed by the build host or fixtures. Keep package
-versions in the CPM policy, not duplicated in compiler defaults. Keep unique
-framework references, protobuf items and dependencies in their owning project.
-Default `IsPackable` to `false` and enable it explicitly for the public library.
+An inner Directory.Build file stops the automatic parent search. Explicit
+imports compose multiple levels. The same nearest-file principle applies
+independently to props and targets.
 
-Create `Directory.Build.targets` only for actual targets or late-bound logic.
-Do not add an empty hierarchy or copy the Collector's entire build pipeline.
-Evaluate conditions only after the properties they need are available. In
-particular, a project-body `TargetFramework` may be empty in an early import;
-item conditions outside targets also evaluate during project evaluation.
+Properties and items outside targets evaluate while the project and its imports
+are read. Targets execute afterward. Consequently, a `TargetFramework` assigned
+in the project body can be empty in an earlier import, and an evaluation-time
+file glob cannot include a file first created during target execution.
 
-## Preserve resource and output identity
+## Properties and items
 
-Keep intermediate and output files distinct across projects, configurations,
-frameworks and RIDs. If adopting centralized SDK artifact output, verify both
-the evaluated paths and every consumer of those paths. Do not assume setting
-an artifact-root property alone replaces an existing explicit path layout.
+| Construct | Effect |
+| --- | --- |
+| Property assignment | Sets a scalar value at that point in evaluation or execution |
+| `Include` | Adds an item |
+| `Update` | Changes metadata on matching existing items |
+| `Remove` | Removes matching items |
+| `Condition` | Controls whether the associated declaration or operation applies |
 
-Known migration touchpoints:
+`MSBuildThisFileDirectory` identifies the containing imported file's directory.
+`MSBuildProjectDirectory` identifies the consuming project's directory. Their
+values differ when configuration is shared through imports.
 
-- `NativeRunnerTests.cs` currently locates its probe under a constructed
-  `bin/<configuration>/net10.0` path. Update that lookup if outputs move; prefer
-  evaluated project output metadata over a second manually maintained layout.
-- The prototype's `Architecture.Testing.csproj` copies collector assets from a
-  version/RID-specific NuGet path. Keep that acquisition with the fixture that
-  owns the Collector and verify its package path under the chosen cache layout.
-- Keep each row's workspace, process and evidence files separate. Shared
-  immutable publication does not justify shared mutable child execution.
+## Output paths
 
-## Generated files and target behavior
+Intermediate and final output paths can vary with project, configuration,
+framework and runtime identifier. Two builds writing the same intermediate files
+can interfere even when their final publish directories differ.
 
-Evaluation-time globs cannot discover files first created later during target
-execution. A custom generator must register its outputs with the appropriate
-items and `FileWrites`, using the evaluated intermediate directory. Choose the
-hook before the actual consuming target; use declared dependencies rather than
-assuming project-file order controls execution.
+The SDK artifact layout supports project-separated output under a shared root:
 
-Preserve the existing `Protobuf` items and `Grpc.Tools` integration. Roslyn
-generator outputs and SDK-managed generated files do not need another custom
-`Compile` glob or a duplicate generation target.
+```xml
+<PropertyGroup>
+  <UseArtifactsOutput>true</UseArtifactsOutput>
+  <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
+</PropertyGroup>
+```
 
-For custom incremental targets, identify real inputs and outputs. Ensure item
-registration still happens when generation is skipped as up-to-date. Do not
-delete outputs on every build to disguise incorrect dependency tracking. Keep
-expensive I/O and process execution out of ordinary project evaluation.
+Explicit path overrides and SDK defaults participate in evaluation. Consumers
+that construct a `bin/Release/net10.0` path do not automatically follow a changed
+layout. `GetTargetPath` exposes a project's evaluated target output through
+MSBuild. The existing `NativeRunnerTests.cs` contains a constructed probe path;
+the prototype collector copy also contains version/RID-specific asset paths.
 
-## Verify the changed graph
+## Targets and generated files
 
-Use the actual affected project and configuration. A focused test invocation
-already compiles its changed dependency graph. Inspect evaluated properties or a
-preprocessed project for import uncertainty; use a binary log for an unresolved
-execution problem. Keep logs out of committed documentation and avoid printing
-credentials or sensitive build properties. Performance claims require measured
-evidence, not a larger concurrency number or a target's inclusive wait time.
+`DependsOnTargets` expresses prerequisite targets; `BeforeTargets` and
+`AfterTargets` attach behavior to named extension points. Target declaration
+order alone does not define execution order. `Inputs` and `Outputs` support
+incremental execution through the declared dependency relationship.
+
+Custom generated source can participate in compilation through a `Compile` item;
+`FileWrites` participates in cleanup accounting. `IntermediateOutputPath`
+reflects the evaluated intermediate directory. Item registration and file
+creation are distinct: compilation still needs the item when an incremental
+generation step is skipped.
+
+The existing protobuf files use `Protobuf` items and `Grpc.Tools`, which supplies
+its own generation integration. Roslyn source generators have a different
+compiler-managed output mechanism.
+
+## Diagnostic representations
+
+A preprocessed project expands imports and helps explain assignment order.
+Evaluated-property and item queries expose selected values. Binary logs capture
+build execution, including task activity and project relationships. A target's
+inclusive duration can contain time waiting for dependencies; it is not the
+same measurement as task self-time.

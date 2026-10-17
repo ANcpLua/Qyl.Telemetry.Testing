@@ -1,64 +1,61 @@
-# Build graph and release evidence
+# Build and package mechanics
 
-## Consolidate responsibilities
+## Current entrypoints
 
-Keep one Fallout build host and one supported entrypoint. The existing Testing
-host lives at `eng/build/_build.csproj`; the prototype has a separate `build/`
-host. Merge useful targets without preserving a second pipeline merely for
-compatibility. Consult local Fallout source for its actual APIs and behavior.
+The starting Testing checkout uses `build.sh`,
+`eng/build/_build.csproj` and `eng/build/Build.cs`. The prototype has a separate
+`build/` host and `build.sh`. Both use Fallout, an improved NUKE fork. Fallout's
+local implementation is available at
+`/Users/alexandernachtmann/RiderProjects/Fallout`.
 
-| Stage | Responsibility |
+The existing Testing entrypoint restores its solution and probes separately;
+the tests also reference the probes. That relationship describes overlapping
+restore graphs, while the build host has additional bootstrap dependencies.
+
+## Restore assets and execution
+
+Restore depends on project/import inputs, framework, configuration, RID, package
+sources and cache locations. `--no-restore` uses existing restore assets;
+`--no-build` uses existing compiled outputs. Neither flag establishes that the
+artifacts match the current inputs.
+
+Project references establish build dependencies. Unrelated stages can overlap,
+while stages consuming an output depend on its completion. Shared mutable
+intermediates can create races even when processes have different final output
+folders.
+
+## Test and consumer boundaries
+
+| Boundary | What executes |
 | --- | --- |
-| Unit tests | Pure assertions, filtering, policy and evidence-processing rules |
-| Integration tests | Real OTLP transport, isolation, flushing and component interaction |
-| Candidate packing | Produce the identified library package and verify package contents |
-| End-to-end tests | Run relevant applications/scenarios against that candidate package |
-| Public verification | Restore and exercise the published immutable package independently |
+| Pure logic | In-memory assertion, filtering or evidence processing |
+| Component interaction | Receivers, transports, exporters and lifecycle behavior |
+| Assembled application | Applications and their external components |
+| Candidate package consumer | Outputs and dependencies from a locally packed package |
+| Public package consumer | Outputs and dependencies restored from the public package |
 
-Classify cases by their actual dependencies. For example, a model-named test that
-starts an HTTP receiver is not pure simply because of its filename. Preserve
-native MSTest discovery, data rows, cancellation, outcomes and source locations.
-Deliberately failing probes need their own child process and expected structured
-results; do not add them to a normal passing test run.
+A test filename does not establish its boundary. A model-named test can still
+start an HTTP receiver. Deliberate failure probes produce expected failed child
+results; those results differ from the outcome of their parent verification
+suite.
 
-## Restore and concurrency
+MSTest discovery, execution and structured reporting expose different evidence.
+Source generation, managed execution and execution of a Native AOT artifact
+also represent distinct mechanisms.
 
-Give restore an explicit owner for each distinct project graph, configuration,
-RID, source policy and package cache. Reuse that restore when its inputs remain
-valid. `--no-restore` is justified only after the needed assets exist for the
-same graph; remove repeated restores after establishing graph coverage.
+## Package and release artifacts
 
-The current Testing entrypoint restores its solution and then probes separately,
-although the tests already reference the probes. Investigate that overlap when
-consolidating the graph. The build host also has its own restore/bootstrap needs.
-Moving to another cache or changing sources/configuration can require a new
-restore even when project text is unchanged.
+Packing produces a package containing assemblies, dependency metadata and other
+payload. Package verification can observe contents and restore behavior that a
+source build does not exercise. The current library also ships proto licensing
+and notices through package items.
 
-Await dependent stages in order. Run independent work concurrently only when it
-does not share mutable intermediate/output state. In particular, isolate RID
-publish/restore graphs and output paths before introducing parallel work.
-Do not tune CPU limits without inspecting process ownership and actual timings.
+Publication uploads an artifact. Indexing makes its version discoverable through
+registry metadata. Consumer execution observes the restored artifact's behavior.
+A release can therefore have different publication, indexing and consumer
+verification states.
 
-## Evidence and publication
-
-Reuse passing checks while relevant inputs remain unchanged; broaden only for
-an unresolved concern. Tests already compile changed code. Documentation-only
-changes require content/link checks, not another execution gate. Keep required
-test failures, unreadable reports and cleanup failures visible.
-
-Keep candidate and public-package evidence separate. A successful source test
-does not prove package layout or dependency metadata. Native AOT evidence, when
-required for the supported scenario, means executing the actual published
-artifact; successful managed execution or compilation alone is insufficient.
-
-Use one `release.sh` lifecycle for the merged public library. Preserve exact
-package/version identity, dependency order, failure propagation, indexing and
-real public consumer verification. Retire the prototype's independent source
-archive release after migration. Record committed, published, indexed and
-verified states distinctly; do not call a candidate or upload alone a release
-verification success.
-
-Separate output directories for test layers, probes, package consumers and
-release attempts. Aggregate valid coverage without treating blanket percentages
-as the business contract. Scope JetBrains inspection to completed changes and
-report tool failures separately from code findings.
+The Testing release tooling packs a candidate, exercises a consumer, uploads the
+package and performs public-package verification. The prototype release tooling
+publishes a checked source archive. These are different existing release models,
+not two names for the same operation.

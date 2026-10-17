@@ -1,98 +1,71 @@
 {
   "repository": "https://github.com/dotnet/skills",
   "commit": "10d85e25fb42d5f65c568d5e979a005ee69eecb3",
-  "kind": "Adapted local guides with optional verbatim upstream references",
-  "usage": "Read README.md and the relevant adapted topic first. Open upstream files only for an unresolved detail; they are documentation, not active workspace instructions.",
-  "files": [
+  "kind": "Technical summaries adapted from upstream documents; agent instructions and workflow rules omitted",
+  "sources": [
     {
-      "local_path": "upstream/LICENSE",
-      "upstream_path": "LICENSE",
-      "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310"
+      "path": "plugins/dotnet-msbuild/skills/directory-build-organization/SKILL.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-msbuild/skills/directory-build-organization/SKILL.md"
     },
     {
-      "local_path": "upstream/plugins/dotnet-msbuild/agents/msbuild.agent.md",
-      "upstream_path": "plugins/dotnet-msbuild/agents/msbuild.agent.md",
-      "sha256": "680cff3b89d6586575d44d3a222c53da27b81ed0016a30073c9f6edc8586d6aa"
+      "path": "plugins/dotnet-msbuild/skills/check-bin-obj-clash/SKILL.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-msbuild/skills/check-bin-obj-clash/SKILL.md"
     },
     {
-      "local_path": "upstream/plugins/dotnet-msbuild/skills/directory-build-organization/SKILL.md",
-      "upstream_path": "plugins/dotnet-msbuild/skills/directory-build-organization/SKILL.md",
-      "sha256": "747e01fe8e1e78f65b52527b066d7e195375351749996c8e03dbed21e4720af4"
+      "path": "plugins/dotnet-msbuild/skills/eliminate-redundant-restores/SKILL.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-msbuild/skills/eliminate-redundant-restores/SKILL.md"
     },
     {
-      "local_path": "upstream/plugins/dotnet-msbuild/skills/check-bin-obj-clash/SKILL.md",
-      "upstream_path": "plugins/dotnet-msbuild/skills/check-bin-obj-clash/SKILL.md",
-      "sha256": "ac355e973ae8577f5067c09aa301a8001ba2de681944f2c6221079ecbb38ff2a"
+      "path": "plugins/dotnet-msbuild/skills/including-generated-files/SKILL.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-msbuild/skills/including-generated-files/SKILL.md"
     },
     {
-      "local_path": "upstream/plugins/dotnet-msbuild/skills/eliminate-redundant-restores/SKILL.md",
-      "upstream_path": "plugins/dotnet-msbuild/skills/eliminate-redundant-restores/SKILL.md",
-      "sha256": "178c6b44ae9d5a4b5aedefa73b1366be7d389e07a3c855e2bdceeb54cc435e74"
+      "path": "plugins/dotnet-msbuild/skills/target-authoring/SKILL.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-msbuild/skills/target-authoring/SKILL.md"
     },
     {
-      "local_path": "upstream/plugins/dotnet-msbuild/skills/including-generated-files/SKILL.md",
-      "upstream_path": "plugins/dotnet-msbuild/skills/including-generated-files/SKILL.md",
-      "sha256": "8216b42f0b12361abc85ad4c439a4c90f728ceccaf7ff184898ff9a99b2336b9"
+      "path": "plugins/dotnet-msbuild/skills/property-patterns/SKILL.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-msbuild/skills/property-patterns/SKILL.md"
     },
     {
-      "local_path": "upstream/plugins/dotnet-msbuild/skills/target-authoring/SKILL.md",
-      "upstream_path": "plugins/dotnet-msbuild/skills/target-authoring/SKILL.md",
-      "sha256": "e39b9ad0bfe65746c8110f971847a1dd8988feccc10b8ad19674ab544926bcc0"
+      "path": "plugins/dotnet-msbuild/skills/directory-build-organization/references/common-patterns.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-msbuild/skills/directory-build-organization/references/common-patterns.md"
     },
     {
-      "local_path": "upstream/plugins/dotnet-msbuild/skills/property-patterns/SKILL.md",
-      "upstream_path": "plugins/dotnet-msbuild/skills/property-patterns/SKILL.md",
-      "sha256": "fa35856fde19371c9de57c518c468a02e8fe26a80b4ee99a5a680cf1449582fd"
+      "path": "plugins/dotnet-msbuild/skills/directory-build-organization/references/multi-level-examples.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-msbuild/skills/directory-build-organization/references/multi-level-examples.md"
     },
     {
-      "local_path": "upstream/plugins/dotnet-msbuild/skills/directory-build-organization/references/common-patterns.md",
-      "upstream_path": "plugins/dotnet-msbuild/skills/directory-build-organization/references/common-patterns.md",
-      "sha256": "6e651cb87034e162e8a966228cbf837612e434c564fd7f9928d38ef44a12e7f3"
+      "path": "plugins/dotnet-msbuild/skills/directory-build-organization/references/targetframework-props-pitfall.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-msbuild/skills/directory-build-organization/references/targetframework-props-pitfall.md"
     },
     {
-      "local_path": "upstream/plugins/dotnet-msbuild/skills/directory-build-organization/references/multi-level-examples.md",
-      "upstream_path": "plugins/dotnet-msbuild/skills/directory-build-organization/references/multi-level-examples.md",
-      "sha256": "6120bf2b385eb2cf348c66173bb27ade493d570db8c497881cc8319f448c820a"
+      "path": "plugins/dotnet-nuget/skills/convert-to-cpm/SKILL.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-nuget/skills/convert-to-cpm/SKILL.md"
     },
     {
-      "local_path": "upstream/plugins/dotnet-msbuild/skills/directory-build-organization/references/targetframework-props-pitfall.md",
-      "upstream_path": "plugins/dotnet-msbuild/skills/directory-build-organization/references/targetframework-props-pitfall.md",
-      "sha256": "a5f0b84a3138e5fdf1fdf103268493006756a1c86312952926f3a10c3e5dd738"
+      "path": "plugins/dotnet-nuget/skills/convert-to-cpm/references/audit-complexities.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-nuget/skills/convert-to-cpm/references/audit-complexities.md"
     },
     {
-      "local_path": "upstream/plugins/dotnet-nuget/skills/convert-to-cpm/SKILL.md",
-      "upstream_path": "plugins/dotnet-nuget/skills/convert-to-cpm/SKILL.md",
-      "sha256": "f4620f14e8196bce1e0727fafac4be4722da1854f5e3114595b6d4d6e06a3eb0"
+      "path": "plugins/dotnet-nuget/skills/convert-to-cpm/references/baseline-comparison.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-nuget/skills/convert-to-cpm/references/baseline-comparison.md"
     },
     {
-      "local_path": "upstream/plugins/dotnet-nuget/skills/convert-to-cpm/references/audit-complexities.md",
-      "upstream_path": "plugins/dotnet-nuget/skills/convert-to-cpm/references/audit-complexities.md",
-      "sha256": "7b6cdb3479d575bcab29d01e08712dde928eca47c47d56870b6cefa653d1a837"
+      "path": "plugins/dotnet-nuget/skills/convert-to-cpm/references/directory-packages-props.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-nuget/skills/convert-to-cpm/references/directory-packages-props.md"
     },
     {
-      "local_path": "upstream/plugins/dotnet-nuget/skills/convert-to-cpm/references/baseline-comparison.md",
-      "upstream_path": "plugins/dotnet-nuget/skills/convert-to-cpm/references/baseline-comparison.md",
-      "sha256": "9defb15f72a7dcaca41856ff5181be98f07972d06dd8d9a4c2d51069337ad3fb"
+      "path": "plugins/dotnet-nuget/skills/convert-to-cpm/references/msbuild-property-handling.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-nuget/skills/convert-to-cpm/references/msbuild-property-handling.md"
     },
     {
-      "local_path": "upstream/plugins/dotnet-nuget/skills/convert-to-cpm/references/directory-packages-props.md",
-      "upstream_path": "plugins/dotnet-nuget/skills/convert-to-cpm/references/directory-packages-props.md",
-      "sha256": "eb6f9cfa3f79ee25df548b30729d2fcd3faa4fb905372cfcbd80ae7da70a61b2"
+      "path": "plugins/dotnet-nuget/skills/convert-to-cpm/references/report-template.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-nuget/skills/convert-to-cpm/references/report-template.md"
     },
     {
-      "local_path": "upstream/plugins/dotnet-nuget/skills/convert-to-cpm/references/msbuild-property-handling.md",
-      "upstream_path": "plugins/dotnet-nuget/skills/convert-to-cpm/references/msbuild-property-handling.md",
-      "sha256": "dd4cf1528b16589b73369afbec6f1dbf4fbff8d1cbb52c0108b3b3cfc4a326c8"
-    },
-    {
-      "local_path": "upstream/plugins/dotnet-nuget/skills/convert-to-cpm/references/report-template.md",
-      "upstream_path": "plugins/dotnet-nuget/skills/convert-to-cpm/references/report-template.md",
-      "sha256": "3dd5a11d62dfc39d270a9fb24a4c13790b05adf31aaf06717a3584a8523752e5"
-    },
-    {
-      "local_path": "upstream/plugins/dotnet-nuget/skills/convert-to-cpm/references/validation-and-errors.md",
-      "upstream_path": "plugins/dotnet-nuget/skills/convert-to-cpm/references/validation-and-errors.md",
-      "sha256": "553c7674f04978a6e08f486156319c7c76a5a733d31c4a72b26be8946a4c5ccf"
+      "path": "plugins/dotnet-nuget/skills/convert-to-cpm/references/validation-and-errors.md",
+      "url": "https://github.com/dotnet/skills/blob/10d85e25fb42d5f65c568d5e979a005ee69eecb3/plugins/dotnet-nuget/skills/convert-to-cpm/references/validation-and-errors.md"
     }
   ]
 }

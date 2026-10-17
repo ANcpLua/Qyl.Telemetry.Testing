@@ -1,66 +1,78 @@
 # NuGet and central package management
 
-## One intentional version policy
+## Central versions
 
-Adopt a root `Directory.Packages.props` for projects sharing this repository's
-package policy. Enable `ManagePackageVersionsCentrally` there and declare each
-ordinary dependency's version once. Remove corresponding `Version` attributes
-from `PackageReference`; retain dependency ownership and metadata such as
-`PrivateAssets="all"` in the consuming project.
+With Central Package Management enabled, ordinary package versions are declared
+as `PackageVersion` items in `Directory.Packages.props`:
+
+```xml
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Google.Protobuf" Version="3.36.2" />
+  </ItemGroup>
+</Project>
+```
+
+A consuming project's dependency remains a `PackageReference`:
+
+```xml
+<PackageReference Include="Google.Protobuf" />
+```
+
+CPM centralizes version selection, not dependency ownership. Metadata such as
+`PrivateAssets`, aliases and generated path properties belongs to the relevant
+reference. `VersionOverride` provides a project-specific version exception when
+that feature is enabled.
 
 Only the nearest `Directory.Packages.props` is automatically imported. A nested
-file replaces the automatic parent lookup unless it explicitly imports the
-parent. Avoid separate test/build version catalogs without a concrete need.
+file can explicitly import its parent. Conditional central items can express
+framework-specific version differences.
 
-Before changing declarations, inventory package references in projects and
-imports, conditional references, evaluated version properties and any overrides.
-Check restored package evidence where resolution matters. Keep conversion and
-dependency upgrades distinct; centralization alone does not justify changing
-frameworks or moving to the newest package versions. Do not flatten a required
-framework-specific version split.
+## Version mechanisms
 
-## Keep different version mechanisms distinct
-
-| Mechanism | Owner |
+| Mechanism | Meaning |
 | --- | --- |
-| Ordinary `PackageReference` versions | `Directory.Packages.props` |
-| .NET SDK and `MSTest.Sdk` selection | `global.json` |
-| Published library product version | One release version declaration, consumed by packaging and release tooling |
-| Coordinated package families or values also used by asset acquisition | Shared named properties when those uses justify them |
-| `PackageDownload` exact ranges | The download declaration and its shared version property; CPM does not replace it |
+| `PackageVersion` | Version selection for an ordinary centrally managed package reference |
+| `global.json` SDK selection | .NET CLI SDK and MSBuild SDK resolution |
+| Project `Version` | Product/package version used by packaging |
+| Shared MSBuild version property | A value usable by package declarations, scripts or asset acquisition |
+| `PackageDownload` | Package acquisition with its own exact version-range declaration |
 
-If using `Version.props`, import it before any `PackageVersion` or other item
-that consumes its properties. Do not rely on a later project-body assignment.
-Retain properties also used by release scripts or RID package acquisition;
-remove obsolete ones only after checking all remaining references. Use
-`VersionOverride` only for a justified exception, not as a default migration tool.
+Property expansion occurs when the consuming declaration evaluates. A version
+property defined after its `PackageVersion` use does not retroactively change
+that item's earlier value. An imported `Version.props` can supply values before
+the central package declarations that consume them.
 
-The two existing `global.json` files declare the same .NET SDK `10.0.401` and
-MSTest SDK `4.5.1`. Consolidation needs one policy, not an incidental upgrade.
-Resolve the actual MTP/framework packages after any relevant input changes.
+The inspected starting projects declare .NET SDK `10.0.401` and MSTest SDK
+`4.5.1` in `global.json`. Those declarations differ from ordinary package
+versions; restored assets describe the packages actually resolved.
 
-## Candidate packages are a separate dependency boundary
+## Source references and package references
 
-Source-level unit and integration tests can use `ProjectReference`. End-to-end
-package verification must consume the packed candidate through `PackageReference`
-and avoid a source-reference fallback to the library under test. The merged
-library must not retain a reference to its own published package.
+`ProjectReference` connects a project graph and its outputs. `PackageReference`
+resolves a package identity and dependency graph. A source-reference test and a
+package-consumer test therefore exercise different delivery paths.
 
-Pack the candidate before restoring its consumers. Do not assume a root solution
-restore can obtain an unpublished candidate that has not been packed yet. Make
-candidate version and package identity explicit in the staged build graph.
+A candidate feed exposes a locally packed package. Its consumer restore depends
+on that package already existing. A generated scratch project outside the
+repository's directory hierarchy does not inherit the repository's CPM file.
+The existing `eng/release/smoke.sh` creates such a project and supplies inline
+package versions.
 
-Use an isolated consumer/cache and deliberate NuGet source mapping so the
-candidate package comes from its candidate feed while external dependencies come
-from the intended public sources. Merely adding two feeds does not guarantee
-which one supplies an overlapping package ID/version. Public verification must
-restore the immutable public package without access to the candidate feed.
+## Feeds and caches
 
-CPM does not govern scratch projects generated outside its directory hierarchy.
-Testing's existing `eng/release/smoke.sh` embeds package versions in such a
-project. Prefer a maintained consumer or explicitly supply its version policy;
-do not assume removing versions in the main checkout fixes that drift.
+`NuGet.Config` describes package sources and can map package ID patterns to
+sources. Source mapping controls eligible sources; merely adding multiple feeds
+does not identify which feed supplies an overlapping package ID/version.
 
-Preserve the proto license and notices already shipped by the library. Keep
-machine credentials and cached packages outside this documentation and source
-tree. Source configuration may name a feed without containing its secret.
+Restore writes assets, generated imports and package-folder information. Changing
+`NUGET_PACKAGES` changes package storage; existing assets may still point at the
+previous location. An isolated package cache distinguishes a fresh package
+consumer from one using an already cached candidate.
+
+The prototype's collector acquisition combines a RID-specific `PackageDownload`
+with a copy from the restored package's tools directory. That asset acquisition
+is distinct from the dependencies published by the testing library.
