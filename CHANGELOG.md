@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 3.0.3
+
+- Consume SemanticConventions 13.1.2 for shared record models and registry conformance.
 
 - Give public-package verification its own fresh NuGet cache, independent of the publisher's cache and checkout cleanup. This changes release tooling only; published packages are unchanged.
 

@@ -4,14 +4,14 @@ Capture exported traces, logs and metrics in .NET tests. Use a loopback OTLP rec
 or capture one operation with `QylTest.TraceAsync`. No running Collector is required.
 
 Targets .NET 10, uses the shared `Microsoft.AspNetCore.App` framework, and integrates with native
-MSTest 4.5.1. Version 3.0.2 consumes Qyl.Telemetry.SemanticConventions 13.1.1.
+MSTest 4.5.1. Version 3.0.3 consumes Qyl.Telemetry.SemanticConventions 13.1.2.
 
 ## Capture an operation
 
 In a .NET 10 MSTest project:
 
 ```sh
-dotnet add package Qyl.Telemetry.Testing --version 3.0.2
+dotnet add package Qyl.Telemetry.Testing --version 3.0.3
 dotnet add package OpenTelemetry.Exporter.OpenTelemetryProtocol --version 1.20.0
 ```
 
