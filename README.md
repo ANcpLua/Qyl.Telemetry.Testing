@@ -1,5 +1,11 @@
 # Qyl.Telemetry.Testing
 
+**Archived successor notice:** active receiver and telemetry-test development moved to
+[Qyl.Telemetry.Tests](https://github.com/ANcpLua/Qyl.Telemetry.Tests), alongside the
+retained architecture fixtures and unit, integration and end-to-end suites.
+Existing NuGet releases, including 3.0.3, remain available for pinned consumers.
+The documentation below describes this historical package.
+
 Capture exported traces, logs and metrics in .NET tests. Use a loopback OTLP receiver on its own,
 or capture one operation with `QylTest.TraceAsync`. No running Collector is required.
 
