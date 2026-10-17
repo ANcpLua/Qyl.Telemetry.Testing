@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Verify native discovery against the original MSTest attribute metadata, including source paths normalized by CI builds.
+
 ## 3.0.3
 
 - Consume SemanticConventions 13.1.2 for shared record models and registry conformance.

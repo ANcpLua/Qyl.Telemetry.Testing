@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 using System.Xml.Linq;
 using JetBrains.Annotations;
@@ -84,10 +85,18 @@ public sealed class NativeRunnerTests
         var source = await File.ReadAllLinesAsync(_source, TestContext.CancellationToken);
         var expectedLine = Array.FindIndex(source,
             line => line.Contains("public void RowsKeepTheirArgumentsAndRoot", StringComparison.Ordinal)) - 2;
+        var original = Assembly.LoadFrom(_probe)
+            .GetType("Qyl.Telemetry.Testing.Probes.ProbeCases", throwOnError: true)!
+            .GetMethod("RowsKeepTheirArgumentsAndRoot")!
+            .GetCustomAttribute<TestMethodAttribute>();
+        Assert.IsNotNull(original);
+        Assert.EndsWith("tests/Qyl.Telemetry.Testing.Probes/ProbeCases.cs",
+            original.DeclaringFilePath.Replace('\\', '/'));
+        Assert.AreEqual(expectedLine, original.DeclaringLineNumber);
         foreach (var row in rows)
         {
             var location = row.GetProperty("location");
-            Assert.AreEqual(_source, location.GetProperty("file").GetString());
+            Assert.AreEqual(original.DeclaringFilePath, location.GetProperty("file").GetString());
             Assert.AreEqual(expectedLine, location.GetProperty("lineStart").GetInt32());
             Assert.AreEqual(expectedLine, location.GetProperty("lineEnd").GetInt32());
         }
