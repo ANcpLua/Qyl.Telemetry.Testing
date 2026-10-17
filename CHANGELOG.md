@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Give public-package verification its own fresh NuGet cache, independent of the publisher's cache and checkout cleanup. This changes release tooling only; published packages are unchanged.
+
 ## 3.0.2
 
 - Consume SemanticConventions 13.1.1, matching the Collector's current dependency. Captures continue to preserve original attributes without applying Collector persistence policy.

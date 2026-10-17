@@ -2,9 +2,11 @@
 """Wait for the immutable public package and exercise it from an isolated consumer."""
 from pathlib import Path
 import json
+import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -27,7 +29,13 @@ try:
         if time.monotonic() >= deadline:
             raise RuntimeError('Public package was not indexed within 45 minutes')
         time.sleep(10)
-    subprocess.run([str(root / 'eng/release/smoke.sh'), version], cwd=root, check=True)
+    # The publisher deletes its cache on exit. A detached verifier must own a
+    # separate cache, and must restore the public package rather than reuse the
+    # candidate that the pre-publication consumer installed there.
+    with tempfile.TemporaryDirectory(prefix='qyl-testing-public-nuget.') as packages:
+        print('Public consumer uses its own fresh package cache.', flush=True)
+        subprocess.run([str(root / 'eng/release/smoke.sh'), version], cwd=root, check=True,
+                       env={**os.environ, 'NUGET_PACKAGES': packages})
     print(f'VERIFIED Qyl.Telemetry.Testing {version}: public-only restore and live receiver smoke passed', flush=True)
 except Exception as error:
     print(f'FAILED Qyl.Telemetry.Testing {version}: {error}', flush=True)
