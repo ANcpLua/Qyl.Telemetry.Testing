@@ -1,22 +1,22 @@
 # Working in this repository
 
-Read README.md and the top three CHANGELOG.md entries. The maintained MSTest reference is
-../mstest-samples-with-docs-4.5.1/SKILL.md; read it in place, without installing or duplicating it.
+Read README.md and the top three CHANGELOG.md entries. For changes to MSTest extensions, use the maintained
+../mstest-samples-with-docs-4.5.1/SKILL.md in place. Use the versions resolved by this repository; currently
+MSTest 4.5.1 and Microsoft.Testing.Platform 2.5.1. Preserve original attributes, results and discovery locations.
+Consumer global lifecycle hooks belong in the consuming test assembly.
 
-Use native MSTest 4.5.1 and Microsoft.Testing.Platform 2.5.1. Preserve original test attributes, discovery locations and
-result objects. Consumer global lifecycle hooks must live in the consuming test assembly.
+Keep generated OTLP DTOs internal and regenerate from the pinned official proto source. Preserve original payloads,
+typed values, resource/scope metadata, events, links and optional-field presence. Never filter raw captures.
+Trace selection is explicit; metric attribution requires a resource partition or matching exemplar. Persistence policy
+belongs to the production Collector: updating SemanticConventions must not apply its key denials to this receiver.
 
-Keep generated OTLP DTOs internal and regenerate from the pinned official proto source. Preserve typed values, all
-resource/scope metadata, events, links and optional-field presence. Do not filter captured records. Trace queries may
-select their trace; metric attribution needs an explicit resource partition or matching exemplar.
+Edit existing code and tests directly. No artificial test seams, blanket suppressions, coverage exclusions, fake APIs
+or empty-evidence passes. Review changed tests' oracles and resource ownership. Run the smallest relevant native check;
+release gates additionally require ./build.sh Pack, all native tests passing, unfiltered coverage and zero INFO-or-higher
+inspection findings. Coverage is informational: prioritize business rules and invariants, leaving dependency and
+generated-code gaps visible instead of adding tests that merely touch members.
 
-Edit existing code and tests directly. No test seams, blanket suppressions, coverage exclusions, fake APIs or
-empty-selection passes. Review every changed test's oracle and fixture lifetime. Run the smallest relevant native check;
-release gates additionally require ./build.sh Pack with all native tests passing, an unfiltered coverage report and zero
-INFO-or-higher inspection findings. The owner removed blanket 100% library thresholds on 2026-10-16: prioritize business
-rules, invariants and meaningful integration tests; keep dependency and generated-code gaps visible without tests that
-merely touch members.
-
-Commit and push completed verified work directly to main. Do not publish an unpublished dependency, configure a private
-feed in tracked files, or report a local candidate as publicly available. Release through ./release.sh only; never print
-a credential value. Keep unrelated owner changes intact.
+Commit and push completed work directly to main. Preserve unrelated owner changes. Consume indexed dependencies for
+publication; never track private feeds or call a local candidate publicly available. Release through ./release.sh;
+never print credentials. Keep release snapshots and test-review evidence in artifacts/ and eng/ rather than adding
+handoff or review narratives to the package README.

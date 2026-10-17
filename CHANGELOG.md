@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.2
+
+- Consume SemanticConventions 13.1.1, matching the Collector's current dependency. Captures continue to preserve original attributes without applying Collector persistence policy.
+- Replace the README with a compact usage guide and remove obsolete handoff and duplicated test-review narratives. Keep historical verification evidence under eng/ and artifacts/.
+
 ## 3.0.1
 
 - Restore checkout package paths to the caller's NuGet cache before removing the isolated release cache, including the runner probes and build host. Preserve the original release failure; if cleanup restore fails, retain the cache and report failure instead of leaving dangling package paths.

@@ -65,3 +65,6 @@ nunit-*.xml
 !eng/release/
 !eng/release/**
 eng/release/__pycache__/
+
+# Per-user JetBrains solution settings.
+*.sln.DotSettings.user
